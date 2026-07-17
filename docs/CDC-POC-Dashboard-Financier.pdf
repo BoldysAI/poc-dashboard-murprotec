@@ -1,0 +1,796 @@
+<html><head><title>CDC-MURPROTEC-001 - Cahier des charges développement POC Dashboard Financier</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body class="pdf fr-FR" lang="fr-FR"><article id="39f74dd6-427b-81a1-bca4-ed0189c20fa5" class="page sans" data-notion-page-icon="🛠️"><header><div class="page-header-icon undefined"><span class="icon" data-emoji="🛠️"></span></div><h1 class="page-title" dir="auto">CDC-MURPROTEC-001 - Cahier des charges développement POC Dashboard Financier</h1><p class="page-description" dir="auto"></p><table class="properties"><tbody><tr class="property-row property-row-created_by"><th><span class="icon property-icon"><img src="https://app.notion.com/icons/user-circle_gray.svg" style="width:14px;height:14px;display:block"/></span>Créée par</th><td><span class="user"><img src="https://s3-us-west-2.amazonaws.com/public.notion-static.com/92f1c96f-6bf6-4a35-831a-f97e550072f7/yassine-officiel.png" class="icon user-icon"/>Yassine Chenik</span></td></tr><tr class="property-row property-row-created_time"><th><span class="icon property-icon"><img src="https://app.notion.com/icons/clock_gray.svg" style="width:14px;height:14px;display:block"/></span>Date de création</th><td><time datetime="2026-07-16T18:32">16 juillet 2026 18:32</time></td></tr><tr class="property-row property-row-multi_select"><th><span class="icon property-icon"><img src="https://app.notion.com/icons/list_gray.svg" style="width:14px;height:14px;display:block"/></span>Type de document</th><td><span class="selected-value select-value-color-yellow">Cahier des charges/Spec</span><span class="selected-value select-value-color-blue">WIP</span></td></tr><tr class="property-row property-row-last_edited_by"><th><span class="icon property-icon"><img src="https://app.notion.com/icons/user-circle_gray.svg" style="width:14px;height:14px;display:block"/></span>Dernière modification par</th><td><span class="user"><img src="https://s3-us-west-2.amazonaws.com/public.notion-static.com/92f1c96f-6bf6-4a35-831a-f97e550072f7/yassine-officiel.png" class="icon user-icon"/>Yassine Chenik</span></td></tr><tr class="property-row property-row-last_edited_time"><th><span class="icon property-icon"><img src="https://app.notion.com/icons/clock_gray.svg" style="width:14px;height:14px;display:block"/></span>Heure de la dernière modification</th><td><time datetime="2026-07-16T18:32">16 juillet 2026 18:32</time></td></tr><tr class="property-row property-row-relation"><th><span class="icon property-icon"><img src="https://app.notion.com/icons/arrow-northeast_gray.svg" style="width:14px;height:14px;display:block"/></span>Projet</th><td><a href="https://app.notion.com/p/Murprotec-POC-dashboard-financier-39674dd6427b819dae0ce6bdeb5ae392?pvs=21">Murprotec - POC dashboard financier</a></td></tr></tbody></table></header><div class="page-body"><h2 id="519d4f7c-693f-478d-9f43-253b17e1551d" class="" dir="auto">⚠️ Statut de ce document</h2><p id="14258ccb-0b4e-4242-820a-57e9cea52628" class="" dir="auto">Ce document est un <strong>document interne, non contractuel</strong>, destiné à l&#x27;équipe de développement (humaine ou agent IA) de <a href="http://Boldys.ai">Boldys.ai</a>. En cas de contradiction avec l&#x27;Annexe Technique MurProtec (Projet-001), <strong>l&#x27;Annexe Technique fait foi</strong> sur tout point relatif au périmètre fonctionnel, aux critères d&#x27;acceptation, au planning ou aux livrables contractuels.</p><p id="037abb10-dae5-4232-a847-2582dc5b1148" class="" dir="auto">Ce CDC est conçu pour être <strong>autosuffisant</strong> : un développeur ou un agent IA doit pouvoir travailler à partir de ce seul document. Le texte fonctionnel de chaque brique est donc <strong>dupliqué</strong> depuis l&#x27;Annexe Technique, et enrichi des précisions du fichier réel et du mail de cadrage de Thomas Di Donato du 16/07/2026.</p><p id="920c87fb-b2e1-45f9-8c13-0a00cac48180" class="" dir="auto"><strong>Conventions de marquage :</strong> ✅ Confirmé (vérifié dans un fichier réel ou confirmé par le Client/Yassine) · ⚠️ Décision Boldys (arbitrage dev, révisable) · 🔶 Ajout post-AT (demandé par Thomas le 16/07/2026, <strong>au-delà du périmètre AT signée = 6 + 5 indicateurs</strong>, intégré au POC sur décision Yassine ; candidat à un avenant, non dû au tarif POC) · ❓ Point ouvert (à lever avant/pendant le dev).</p><h2 id="57421da7-f9c9-4d50-a049-d0deeabe065d" class="" dir="auto">Vue d&#x27;ensemble technique</h2><ul id="a91be40d-fa97-44af-92d0-08078ab64bcf" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Frontend + logique métier</strong> : Next.js (React), sans backend séparé — parsing Excel, calculs d&#x27;affichage et export PDF intégrés à l&#x27;application.</li></ul><ul id="ce77cbaa-b3af-4a33-a5ba-5acf1478f25d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Base de données</strong> : aucune. Chaque upload est traité à la volée ; aucune persistance côté application.</li></ul><ul id="3a4981fc-fd37-4d4b-9fca-b678948db92e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Hébergement</strong> : infrastructure interne du Client (Murprotec), via son service IT.</li></ul><ul id="ba09c2ec-46b4-4d9c-ba72-2edb4caf55b7" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Accès</strong> : utilisateur unique (Thomas Di Donato) pour la durée du POC.</li></ul><ul id="502a696f-3b7d-47b1-a68c-b724aff6b1e5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Intégrations tierces</strong> : aucune (pas de CRM, ERP, ou service IA).</li></ul><ul id="d7840c90-6eb9-415a-9631-a059b739850f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Hébergement IT côté Client</strong> : contact service IT = Brahim Hadj Safi (cf. mail 13/07).</li></ul><p id="5521ac6c-91d5-49e4-9fe2-47224f3a5bd4" class="" dir="auto"><strong>Fichiers sources de référence (reçus le 16/07/2026) :</strong> Trésorerie = <code>TRESOR 30 06 2026 Boldys.xls</code> (1 onglet <code>Tresorerie</code>, legacy <code>.xls</code>) · Reporting = <code>BENELUX - 01 2026 Boldys.xlsx</code> (11 onglets, dont 4 agences belges <code>FLA W</code>/<code>FLA O</code>/<code>WAL E</code>/<code>WAL O</code> + <code>Chiffres Clés</code>) · Logo = <code>image002.jpg</code> (bandeau 275×54) dans le corps du mail ; <code>Entete MPG 27.docx</code> est un en-tête A4 portrait, non adapté à l&#x27;export paysage.</p><p id="5f340dd2-f6f9-4566-8a7b-b652692885ba" class="" dir="auto">Ce document couvre, pour chaque brique, le détail d&#x27;implémentation. Il a servi de base au backlog de tâches Notion (skill <code>boldys-cdc-notion-tasks</code>) : voir base Tâches, Modules <code>SOCLE</code>/<code>TRESORERIE</code>/<code>REPORTING-AGENCE</code> (3 Epics, 19 Stories, 1 Spike).</p><h2 id="10bbdd48-5a8c-4c69-aa02-ea262ebe578e" class="" dir="auto">Sommaire</h2><ul id="1e6c677f-1aab-4fc7-b197-2b37dd3d93f4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Brique 1 — Dashboard Trésorerie Groupe</li></ul><ul id="ceba9f33-d4fd-4bd7-8ab8-4556e8ece324" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Brique 2 — Dashboard Reporting Financier</li></ul><ul id="d5d1ae63-c513-4b22-8852-4ab3a5f36268" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Synthèse finale des structures de données</li></ul><hr id="d9cab653-d381-4e29-b255-4bb0b8aa5ac4" dir="auto"/><h2 id="cc669c08-0835-4f54-9313-6692dbc12ef3" class="" dir="auto">Brique 1 — Dashboard Trésorerie Groupe</h2><h3 id="f2ea4bb4-9c7e-4542-a45c-b5d16a3a4076" class="" dir="auto">Objectif</h3><p id="e4a3ef53-4581-45d2-abff-4a3d7e60a7b2" class="" dir="auto">Dashboard web consolidant sur une page les indicateurs de trésorerie groupe, alimenté par upload manuel mensuel du fichier Excel de trésorerie, exportable en PDF.</p><h3 id="75283f38-05a4-42b9-ad1f-04b2f7efbed0" class="" dir="auto">Structure réelle du fichier source ✅ (vérifiée)</h3><ul id="778d6c74-f86f-4641-b637-80f9bb36dcbd" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>1 seul onglet </strong><code><strong>Tresorerie</strong></code>. Une <strong>colonne par société</strong> (C → Y, ~23 sociétés) ; colonne <strong>Z = total Europe</strong> (agrégat groupe).</li></ul><ul id="bd7275c7-b2c2-48cc-b027-86fa50071bcd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Ligne 7 = marque (Murprotec, Ecoprotec, Airprotec, Aquadetect, MQS, MPC…) ; ligne 8 = activité/pays en clair ; <strong>ligne 10 = pays (masquée)</strong> : FRANCE, BELGIQUE, LUXEMBOURG, HOLLANDE, ESPAGNE, ITALIE, PORTUGAL, SUISSE, ALLEMAGNE ; ligne 9 = devise.</li></ul><ul id="1c7f6deb-3b02-4b39-8d00-6b289d0128dd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Thomas confirme : la structure ne change pas d&#x27;un mois à l&#x27;autre ; seul un ajout/retrait de colonne quand une société entre/sort du Groupe. Le parsing doit donc être <strong>robuste au nombre variable de colonnes sociétés</strong> (ne pas coder 23 en dur).</li></ul><h3 id="8d83a3ba-f7bc-4e39-8088-dd3666c38283" class="" dir="auto">Cellules exactes ✅ (confirmées par Thomas, mail 16/07)</h3><ul id="dbdfc81c-4fec-488c-b04c-e06467b6fa20" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>% Placement</strong> : <code>Z45</code> (= <code>Z40/Z43</code>, libellé « % Epargne »).</li></ul><ul id="32697354-b6af-43b6-af91-2a4ec34a45b5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Total dépenses</strong> : <code>Z15</code>. <strong>Total recettes</strong> : <code>Z22</code>.</li></ul><ul id="3c9b83c3-ecca-4abc-bcee-ca04e9af0bff" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Solde au 01/01/2026</strong> : <strong>ligne 52 (masquée)</strong>. ✅ Thomas confirme (16/07) que dans le fichier mensuel réel, <strong>tous les chiffres sont fonctionnels et aucune liaison n&#x27;est cassée</strong> : la valeur du solde 01/01 est donc directement disponible en ligne 52, à lire telle quelle. (Les valeurs 6000 vues dans le fichier de test étaient de fausses données de démonstration.)</li></ul><ul id="4dc6bc64-c97e-4989-9f1f-3c6f8c326869" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Solde courant (date du fichier)</strong> : ligne 27, total <code>Z27</code>. <strong>Total Général</strong> (placements inclus) : <code>Z43</code> (= <code>Z40 + Z27</code>).</li></ul><h3 id="9d4c2329-d92c-426a-8b75-18c6baabf807" class="" dir="auto">Fonctionnalités attendues (6 indicateurs — périmètre AT)</h3><ol type="1" id="c648e47a-9bc4-4e6a-8e60-0ab10f5daf04" class="numbered-list" start="1" dir="auto"><li><strong>Position nette de trésorerie</strong> — total groupe. ⚠️ Décision Boldys : mapper <code>Z27</code> (hors placements) ; <code>Z43</code> (Total Général) affiché en complément. ❓ À confirmer laquelle est « la position nette » de référence.</li></ol><ol type="1" id="4e918d9e-c233-430a-b8d2-2e5db8c5d151" class="numbered-list" start="2" dir="auto"><li><strong>Répartition en % par pays</strong> — camembert ; agrégation des colonnes sociétés (C→Y) par pays (ligne 10).</li></ol><ol type="1" id="b32d9319-f5a7-4639-bdd1-017717f08b02" class="numbered-list" start="3" dir="auto"><li><strong>% Placements</strong> — lu en <code>Z45</code>.</li></ol><ol type="1" id="f7d128c8-1644-4f70-9a45-41e857bb782a" class="numbered-list" start="4" dir="auto"><li><strong>Variation depuis le 1er janvier</strong> — ligne 27 − ligne 52.</li></ol><ol type="1" id="2b15a7a4-31ca-4f8c-80f6-a106f349ccb4" class="numbered-list" start="5" dir="auto"><li><strong>Recettes</strong> — total <code>Z22</code> et par société. ✅ Thomas confirme (16/07) : affichage <strong>du mois courant uniquement</strong> — pas de série multi-mois. Cohérent avec l&#x27;absence de persistance : chaque import = un mois.</li></ol><ol type="1" id="2831daac-4a9e-48d3-b66c-45fb067a9ba9" class="numbered-list" start="6" dir="auto"><li><strong>Dépenses</strong> — total <code>Z15</code>, mois courant uniquement (idem point 5).</li></ol><h3 id="95757fda-a051-42d3-a10b-f2444d0afef0" class="" dir="auto">🔶 Ajout post-AT — Composition des dépenses</h3><p id="36fc5b42-ad12-44e5-b2b4-3a577ea0f5f9" class="" dir="auto">Thomas demande une sous-information sur la composition des dépenses → décomposition de <code>Z15</code> sur les lignes 16-20 : <strong>Salaires &amp; Charges (16), Impôts &amp; Taxes (17), Fournisseurs (18), Dividendes (19), Transferts Internes (20)</strong>. Hors périmètre AT, intégré au POC (décision Yassine).</p><h3 id="86c3dc4f-d4ce-418c-b1da-d12b288c793f" class="" dir="auto">Règles métier</h3><ul id="901320e8-80c3-4e03-9893-952ccc88e671" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Devise : ✅ Thomas confirme (16/07) — <strong>tout est compté en EUR tel quel, aucun cas CHF à gérer</strong>, aucune conversion de change. La logique multi-devises est donc inutile pour ce POC (montants agrégés directement).</li></ul><ul id="77f0d368-7f45-4e3d-885e-2e3e00fa16bc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Source unique = fichier Excel mensuel ; aucune persistance entre uploads ; seul l&#x27;export PDF (A4 paysage, logo <code>image002.jpg</code>) est une trace côté Client.</li></ul><ul id="7667989a-93e1-47bf-9e9f-6070cf0fe0f7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Accès : utilisateur unique (Thomas Di Donato).</li></ul><h3 id="aa6501fa-34f0-43d2-b604-a41cd2d80919" class="" dir="auto">Structure de données ✅</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-jsx.min.js" integrity="sha512-m3JYEI6gx5fh9jF10FjGoMzVKcV2N6nchcDcqPCdI1L3R2WQV7br2XVNR8iTLb2daOMRl3zldbcfT40xU2ntVw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="699f56a3-f6a8-41a9-8e67-2d6ecba4926e" class="code code-wrap" data-notion-code-syntax="jsx"><code class="language-jsx" style="white-space:pre-wrap;word-break:break-all">TresorerieData {
+  parSociete: [{ colonne: string, marque: string, pays: string, soldeCourant: number }]  // colonnes C→Y, ligne 27 ; nb variable
+  parPays: [{ pays: string, montantTotal: number }]     // agrégation ligne 10 × ligne 27
+  positionNette: number            // Z27 — à confirmer vs Z43
+  totalGeneral: number             // Z43 = Z40 (placements) + Z27
+  pctPlacements: number            // Z45
+  soldeAu1erJanvier: number        // ligne 52 (masquée) — lu directement (chiffres fonctionnels, confirmé 16/07)
+  variationDepuis1erJanvier: number // ligne 27 − ligne 52
+  totalRecettes: number            // Z22
+  totalDepenses: number            // Z15
+  compositionDepenses: {           // 🔶 ajout post-AT — lignes 16-20
+    salairesCharges: number, impotsTaxes: number, fournisseurs: number,
+    dividendes: number, transfertsInternes: number
+  }
+  logoUrl: string                  // image002.jpg (bandeau) du mail 16/07
+}</code></pre><p id="e6ebd4a9-c22c-4e2c-8547-56e4b72b06fe" class="" dir="auto"><em>(En mémoire uniquement — aucune persistance, AT §4.3.)</em></p><h3 id="a38b9b2e-cf29-4ed2-8c11-d39b2726663e" class="" dir="auto">Workflow</h3><ol type="1" id="7e8c941f-c113-4d46-878f-01e037f872fc" class="numbered-list" start="1" dir="auto"><li>Upload du <code>.xls</code> trésorerie. 2. Parsing côté serveur (⚠️ route API Next.js ; gérer le legacy <code>.xls</code>/BIFF, lib type SheetJS). 3. Détection dynamique des colonnes sociétés + ligne pays (10). 4. Extraction Z15/Z22/Z45, lignes 27/52 + décomposition dépenses (16-20). 5. Agrégation par pays ; variation vs 01/01. 6. Affichage 6 indicateurs + sous-bloc composition. 7. Export PDF A4 paysage (bandeau logo). 8. Aucune donnée conservée.</li></ol><h3 id="bce9ab91-e695-4e84-8411-2b197244d0fb" class="" dir="auto">Points ouverts</h3><p id="17e57b90-161f-4374-be20-48792676f2c9" class="" dir="auto"><strong>Côté Client :</strong> ✅ tous levés (16/07) — solde 01/01 lu en ligne 52 (chiffres fonctionnels) · recettes/dépenses = mois courant · tout en EUR sans CHF.</p><p id="4c376389-5189-423d-a2c1-1a7632375c92" class="" dir="auto"><strong>Côté dev :</strong> ⚠️ « position nette » = <code>Z27</code> (hors placements) retenu par défaut, <code>Z43</code> affiché en complément (décision Boldys, non bloquante) · ⚠️ lib parsing <code>.xls</code> legacy (BIFF, type SheetJS) · ⚠️ méthode génération PDF (rendu A4 paysage engageant).</p><hr id="109fd36f-7c9f-42a2-b70a-4ab7154f450c" dir="auto"/><h2 id="9caf8c0c-2f99-4a3e-af12-f46e193777ca" class="" dir="auto">Brique 2 — Dashboard Reporting Financier</h2><h3 id="ac0e59ed-a8d9-4d48-87d8-649a45e31811" class="" dir="auto">Objectif</h3><p id="48fdd960-f3e4-46e2-bf85-6aa71684533f" class="" dir="auto">Dashboard traduisant le compte de résultat en visuels lisibles par un directeur d&#x27;agence non-financier. Agence pilote du POC : <code><strong>WAL O</strong></code><strong> (Wallonie Ouest, agence de Frameries)</strong> — code interne en cellule A3 = « WAO ».</p><h3 id="de0141fa-d939-49b5-9e0e-19de6b1175c0" class="" dir="auto">Structure réelle du fichier source ✅ (vérifiée)</h3><ul id="df2f40cc-127d-4b81-81ee-63599de19871" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>BENELUX - 01 2026 Boldys.xlsx</code> : <strong>11 onglets</strong>, dont <strong>4 agences belges de structure identique</strong> (117-119 lignes × 43 colonnes) : <code>FLA W</code> (FLW), <code>FLA O</code> (FLO), <code>WAL E</code> (WAE), <code><strong>WAL O</strong></code><strong> (WAO) ← cible POC</strong>. Autres : Données Evolution, Synthèse, Total Agences, Siège, Direction, Belgique, Chiffres Clés.</li></ul><ul id="3d932304-64cb-4377-bcd9-108262c94485" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Sélection par <strong>nom d&#x27;onglet (</strong><code><strong>WAL O</strong></code><strong>)</strong> ou code A3 (<code>WAO</code>). ⚠️ Décision Boldys : UI figée sur WAL O (pas de menu multi-agences).</li></ul><ul id="941bfd2a-08df-4904-82d7-c25814a631ef" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Colonnes : <strong>B→M = mois (Janvier→Décembre)</strong>, <strong>N = TOTAL</strong>, <strong>O = Fin Janvier N-1</strong>, <strong>P = VARIATION N-1</strong>, <strong>Q = ANNÉE N-1</strong>, <strong>R = Moyenne</strong>. Fichier 01/2026 : seul Janvier (col B) rempli.</li></ul><ul id="0b27d6b3-ed9d-4a40-9f34-49f1dd825e20" class="bulleted-list" dir="auto"><li style="list-style-type:disc">⚠️ <strong>Le mapping de cellules du mail de Thomas est approximatif</strong> (ex. « taux poseur = B9/B14 » : dans le fichier réel B9 = Condensation DH, et le taux poseur est déjà en <code>B39</code>). <strong>Se fier au mapping réel ci-dessous.</strong> Tous les ratios sont <strong>pré-calculés</strong> — on lit, on ne recalcule pas.</li></ul><h3 id="9ba5c21d-3152-49d2-8d9f-3a93c79d5bcc" class="" dir="auto">Mapping réel ✅ (onglet WAL O, colonne B = mois courant / N = total / O-P-Q = N-1)</h3><ul id="2d04aaec-2d1e-488a-925a-7d956cc135b8" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>CA par nature</strong> (7-12) : Chimique (7), Condensation CTA/STA/XTRAIR/COVAIR/RECUPAIR (8), Condensation DH (9), Cuvelage-drainage (10), Hydrofugation (11), Autres (12). <strong>TOTAL CA</strong> = 14. Dont CA MQS = 16 ; % Chimique = 18.</li></ul><ul id="425c7977-f03b-48ac-b580-7c6bafc5e23d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Bénéfice brut</strong> = 35 ; marge = 36 ; N-1 en colonne O.</li></ul><ul id="5379d3dd-6455-438e-a97d-8f0117a2ddcd" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Taux clés (5)</strong> pré-calculés : % Marchandises (38), % Poseurs (39), % Surveyor (40), % Commissions /CA facturé (41) et /CA vente (42), % Publicités (43).</li></ul><ul id="0d989ce8-201a-4625-a230-4a69a797afa3" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Structure des charges</strong> : TECHNIQUE = 53, VENTE = 62, ADMINISTRATION = 78 (+ FINANCIER 83).</li></ul><ul id="d2d3f52d-5597-43ee-9193-09ab7622c9b4" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Frais fixes</strong> = 97 ; <strong>Break-even</strong> = 99 ; marge nette = 98.</li></ul><ul id="913f0a50-b953-463e-840c-7b6d616205b4" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Variation vs N-1</strong> : colonne P ; profit après impôts = 95.</li></ul><h3 id="1acbba73-8217-45b0-9eaf-74fd7cb3bcf8" class="" dir="auto">Seuils de déviation ✅ (levés — onglet <code>Chiffres Clés</code>, colonne A)</h3><p id="12ffd99e-c220-489d-92de-8ccf7b7cc0cd" class="" dir="auto">Les seuils sont <strong>dans le fichier</strong>. Onglet <code>Chiffres Clés</code>, colonne A, 4 agences en colonnes (C=Flandre Ouest, D=Flandre Est, E=Wallonie Est, <strong>F=Wallonie Ouest = WAL O</strong>) :</p><p id="de8efd82-df53-487d-ab4b-ba66de43144d" class="" dir="auto">% Chimique &lt; 3,5 % · % DH &lt; 33 % · % Cuvelage &lt; 20 % · % CTA &lt; 24 % · <strong>% Poseurs &lt; 12 %</strong> · <strong>% Vendeurs &lt; 15-18 %</strong> · <strong>% Publicité &lt; 12 %</strong> · % Coût Techniciens &lt; 5 % · % Coût Adm &lt; 6 % · Euro/coupon &lt; 795 € · Panier moyen &lt; 5200 € · Coût coupon &lt; 70 € · Nbre de mois &lt; 1 mois.</p><h3 id="75a1d855-d7f3-461d-a9d1-625ed32078bb" class="" dir="auto">Fonctionnalités attendues (5 indicateurs — périmètre AT)</h3><ol type="1" id="4a140994-42bd-4ec4-9233-f82161d5edef" class="numbered-list" start="1" dir="auto"><li><strong>Répartition du CA par produit</strong> (lignes 7-12).</li></ol><ol type="1" id="3e088a6d-0b92-48dc-8bad-aa2c648c65ce" class="numbered-list" start="2" dir="auto"><li><strong>Bénéfice brut &amp; marge</strong> (35/36) avec N-1 (col O).</li></ol><ol type="1" id="3569dbcc-b6ea-4adc-b81c-1c766e0d6110" class="numbered-list" start="3" dir="auto"><li><strong>Taux clés</strong> (5 ratios, 38-43) avec signal de déviation vs seuils (<code>Chiffres Clés</code> col A).</li></ol><ol type="1" id="90c8e94f-5107-4ff4-9597-89016c6e7269" class="numbered-list" start="4" dir="auto"><li><strong>Structure des charges</strong> — Technique (53) / Vente (62) / Administration (78) en %, + break-even (99).</li></ol><ol type="1" id="64c2c1a7-4585-4200-ab29-1c2429f50ab2" class="numbered-list" start="5" dir="auto"><li><strong>Variation globale vs N-1</strong> (colonne P).</li></ol><h3 id="29394bbc-de23-4ca1-9cd9-2cfe1166d271" class="" dir="auto">🔶 Ajouts post-AT (mail 16/07 — onglet <code>Chiffres Clés</code>, colonne F = WAL O)</h3><p id="b1177573-0d3e-4e91-86e2-5a7a0b0bb4a3" class="" dir="auto">Hors périmètre AT, intégrés au POC (décision Yassine). <strong>Base de « facturation moyenne » confirmée</strong> par la formule du fichier (<code>F45 = F42/(F6/$B$4)</code>) : facturation moyenne mensuelle = <strong>Cumul CA (ligne 6) ÷ nombre de mois écoulés (cellule B4)</strong>.</p><ul id="ecd488a8-e282-470f-84eb-f0e5b73eb716" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Cahier de commande</strong> = « Attente » (ligne 8). Nb de mois = Attente ÷ facturation moyenne (L6/B4) — <strong>non pré-calculé dans le fichier, à calculer</strong> avec cette formule (ex. WAL O : 1 643 369 / 457 602 ≈ 3,59 mois).</li></ul><ul id="0640662c-9dfb-4b6c-9f0b-8f546a10f1f3" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Impayés</strong> = « liste rouge » (ligne 42). Nb de mois = <strong>ligne 45, pré-calculé — à lire directement</strong> (ex. WAL O : 0,87 mois).</li></ul><ul id="4565fc15-6020-4ce8-8ca0-963b8e75e0d3" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Euro/coupon</strong> = ligne 36, seuil &lt; 795 €.</li></ul><h3 id="866fae87-7e5b-474c-95c5-f8f943471f8c" class="" dir="auto">Règles métier</h3><ul id="218bbca1-59a2-4ba3-87fc-cff9e001e9f9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Valeurs <strong>déjà calculées</strong> dans le fichier ; lecture + mise en forme, sans recalcul (sauf le nb de mois du cahier de commande, seul calcul autorisé, qui réplique la formule existante du fichier).</li></ul><ul id="682dd281-4a44-4630-9694-2cb9b954e2ec" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Catégories de CA = liste fermée (7-12), invariable pour le POC.</li></ul><ul id="5168bc07-3e53-4303-b6aa-0f4210d8bdfc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Fichier multi-agences ; seule WAL O affichée pour le POC.</li></ul><h3 id="8679e8de-3700-47c1-8f50-d03b726f90c5" class="" dir="auto">Structure de données ✅</h3><pre id="18137b66-5eb8-45e0-aaa0-e6b7e2c5d000" class="code code-wrap" data-notion-code-syntax="jsx"><code class="language-jsx" style="white-space:pre-wrap;word-break:break-all">ReportingData {
+  agenceCible: &#x27;WAL O&#x27;             // code A3 = &quot;WAO&quot; (Wallonie Ouest / Frameries)
+  repartitionCA: [{ categorie: &#x27;Chimique&#x27;|&#x27;Condensation CTA&#x27;|&#x27;Condensation DH&#x27;|&#x27;Cuvelage&#x27;|&#x27;Hydrofugation&#x27;|&#x27;Autres&#x27;, montant: number }] // lignes 7-12
+  caTotal: number                 // ligne 14
+  beneficeBrut: number            // ligne 35 ; margeBrute ligne 36
+  beneficeBrutN1: number          // ligne 35, colonne O
+  tauxCles: [{ nom, valeur, seuil, enDeviation }]  // lignes 38-43 ; seuils depuis &quot;Chiffres Clés&quot; col A/F
+  structureCharges: { technique: number /*53*/, vente: number /*62*/, administration: number /*78*/ }
+  fraisFixes: number              // ligne 97
+  breakEven: number               // ligne 99
+  variationVsN1: number           // colonne P
+  cahierCommande: { montant: number /*L8 Attente*/, nbMois: number /* = L8 / (L6/B4), à calculer */ }  // 🔶
+  impayes: { listeRouge: number /*L42*/, nbMois: number /*L45, pré-calculé, à lire*/ }                 // 🔶
+  euroCoupon: { valeur: number /*L36*/, seuil: 795 }                    // 🔶
+}</code></pre><p id="f2d4dbff-c88a-4f21-ba05-f18374c1a3a6" class="" dir="auto"><em>(En mémoire uniquement — aucune persistance, AT §4.3.)</em></p><h3 id="8b693c75-2338-4b7c-b44b-af31c1e2fea3" class="" dir="auto">Workflow</h3><ol type="1" id="d0ac41f1-33c9-4bd7-86f3-39f80ca09c21" class="numbered-list" start="1" dir="auto"><li>Upload du <code>.xlsx</code> reporting. 2. Sélection de l&#x27;onglet <code>WAL O</code>. 3. Extraction du mapping réel (CA 7-12, bénéfice 35, taux 38-43, charges 53/62/78, break-even 99, N-1 col O/P). 4. Extraction seuils + ajouts post-AT depuis <code>Chiffres Clés</code> (colonne F). 5. Flags de déviation. 6. Affichage 5 indicateurs + 3 blocs post-AT. 7. Aucune donnée conservée.</li></ol><h3 id="954948b9-b9c0-4f25-97c5-cf30eff3aab2" class="" dir="auto">Points ouverts</h3><p id="31733379-4563-4c5c-b4b6-dafef0bf1e72" class="" dir="auto"><strong>Côté Client :</strong> ✅ tous levés (16/07) — agence pilote = <strong>WAL O</strong> confirmée · base de la facturation moyenne = présente dans l&#x27;Excel (<code>Chiffres Clés</code>, formule F45).</p><p id="5c8b135d-6417-4494-91d3-bf51914e353a" class="" dir="auto"><strong>Côté dev :</strong> ⚠️ robustesse sélection onglet (nom <code>WAL O</code> vs code A3 <code>WAO</code>) · ⚠️ ignorer les mois vides (colonnes C→M à 0 dans le fichier 01/2026) · ✅ facturation moyenne = Cumul CA (L6) ÷ mois écoulés (B4), confirmée par la formule F45 du fichier.</p><hr id="918a61ab-7392-42cb-9bd0-1d38538c7d99" dir="auto"/><h2 id="39abec01-c36d-4d84-bedc-ec190d18a290" class="" dir="auto">Synthèse finale des structures de données</h2><p id="af498579-7edd-4acb-a0e8-637ba01c37ed" class="" dir="auto">Aucune base de données (traitement Excel à la volée, AT §4.3). Les deux structures vivent en mémoire le temps d&#x27;une session.</p><table id="ff992d67-2b43-4ece-9f4a-9a59cb09cf01" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="381bcff5-d54c-4dc9-b31d-8e62d1bbd9fd" dir="ltr"><th id="hPlV" class="simple-table-header-color simple-table-header">Structure</th><th id="IY&gt;I" class="simple-table-header-color simple-table-header">Onglet(s) source</th><th id="SRzr" class="simple-table-header-color simple-table-header">Persistance</th><th id="}l@Z" class="simple-table-header-color simple-table-header">Points ouverts résiduels</th></tr></thead><tbody><tr id="b0b9bbe6-22a0-4bc7-9306-ae14111423c4" dir="ltr"><td id="hPlV" class=""><code>TresorerieData</code></td><td id="IY&gt;I" class=""><code>Tresorerie</code> (1 onglet)</td><td id="SRzr" class="">Aucune</td><td id="}l@Z" class="">Solde 01/01 : lu en ligne 52 ✅ · position nette Z27/Z43 (décision Boldys)</td></tr><tr id="4859fd3f-afa3-4ff0-be6b-03e9f0ead7ad" dir="ltr"><td id="hPlV" class=""><code>ReportingData</code></td><td id="IY&gt;I" class=""><code>WAL O</code>  • <code>Chiffres Clés</code></td><td id="SRzr" class="">Aucune</td><td id="}l@Z" class="">Localiser la ligne de facturation moyenne (dev) ✅ périmètre confirmé</td></tr></tbody></table><p id="5f6d482a-9ca4-492a-9ca0-bd6beb7553e6" class="" dir="auto"><strong>Briques indépendantes</strong> : aucune ne réutilise ni n&#x27;étend la structure de l&#x27;autre.</p><h3 id="a192c005-e7f4-4abd-96f8-61bf223dc4fb" class="" dir="auto">État des points ouverts vs versions précédentes du CDC</h3><p id="68ca2542-a7db-47f5-a354-570c1636dc3d" class="" dir="auto"><strong>Levés grâce aux fichiers réels du 16/07 :</strong> mapping colonnes trésorerie (cellules confirmées) · logo (image002.jpg identifié) · nombre et nom des onglets reporting (4 agences, WAL O) · seuils de déviation (dans <code>Chiffres Clés</code>).</p><p id="38c1a954-b8af-41e3-9c4a-d69718e8e1bc" class="" dir="auto"><strong>Levés grâce aux confirmations de Thomas (16/07, second échange) :</strong> solde 01/01 fonctionnel (aucune liaison cassée, lu en ligne 52) · recettes/dépenses = mois courant uniquement · agence pilote = WAL O · tout en EUR, aucun cas CHF · base de facturation moyenne = formule F45 du fichier <code>Chiffres Clés</code>.</p><p id="7f0d2b6d-e653-46a1-a90a-eff014c3df4d" class="" dir="auto"><strong>Points restants (non bloquants, côté dev uniquement) :</strong> choix « position nette » Z27/Z43 (décision Boldys) · robustesse parsing (<code>.xls</code> legacy, mois vides, sélection d&#x27;onglet).</p><h3 id="42a372e6-23e5-4e5d-8b2c-ac4026b5a710" class="" dir="auto">⚠️ Traçabilité du périmètre (marge / scope)</h3><p id="7d4a4369-54cb-44cd-9a54-56c1e3f8ae02" class="" dir="auto">L&#x27;AT signée porte sur <strong>6 + 5 indicateurs</strong>. Les éléments 🔶 (composition des dépenses ; cahier de commande + estimation mois ; impayés + nb de mois ; euro/coupon) sont <strong>hors de ce périmètre</strong>, intégrés au POC sur décision de Yassine, sans avenant ni refacturation à ce stade. <strong>Recommandation Boldys : cadrer ces ajouts comme périmètre distinct lors de la prochaine étape contractuelle</strong>, pour ne pas les entériner au tarif POC (2 000 € HT) et s&#x27;en servir de levier à l&#x27;extension.</p><h3 id="c4e8e3c9-acff-47bd-8238-a2b8eec8a0c1" class="" dir="auto">Backlog Notion</h3><p id="faaa6fc8-b898-4f8f-8601-ac225fba3db9" class="" dir="auto">Ce CDC a été transformé en backlog dans la base Tâches (skill boldys-cdc-notion-tasks) : 3 Epics (Modules SOCLE, TRESORERIE, REPORTING-AGENCE), 19 Stories, 1 Spike. Voir la base Tâches filtrée sur ces 3 Modules pour le détail complet des tâches.</p></div></article></body></html>
