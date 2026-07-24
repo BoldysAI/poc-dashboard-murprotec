@@ -242,3 +242,10 @@ Vérifié sur fichiers réels : lignes masquées 10/52 lisibles ; Z45/Z15/Z22/L2
 - AT §4.3 (pas de BDD / pas de fichiers serveur) respectée — persistance = navigateur uniquement, confort POC.
 - Copy reset : précise l’effacement du cache navigateur.
 - Source : instruction développeur session.
+
+## 2026-07-24 · [P] · Packaging Docker pour Coolify (VPS)
+
+- `Dockerfile` multi-stage `node:20-bookworm-slim` + `.dockerignore` à la racine.
+- S’appuie sur `output: 'standalone'` déjà présent dans `next.config.ts` ; CMD = `node server.js`, port **3000**, `HOSTNAME=0.0.0.0`.
+- Secrets runtime injectés par Coolify (`OPENAI_API_KEY`, optionnel `OPENAI_MODEL`) — documentés dans `.env.example`. Pas de docker-compose (déploiement Git → Coolify).
+- Source : demande session déploiement VPS Coolify.
