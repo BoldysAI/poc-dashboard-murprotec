@@ -38,12 +38,17 @@ const { reportingBundle, setReportingBundle, selectedReportingData } =
 - Reporting chargé : `AgenceTabs` + `selectedReportingData` pour les blocs.
 - **Pas d’attribut `accept`** sur l’input : le sélecteur ne filtre pas par extension ; la validation format/structure est **côté API** (message d’erreur affiché).
 - Erreurs API : message JSON `{ error }` affiché à l’utilisateur — jamais de stack.
-- Refresh navigateur = wipe (AT §4.3).
+- Refresh navigateur = **conserve** le cache (`localStorage`, clé `murprotec-dashboard-cache-v1`) jusqu’à reset explicite.
+- Wipe : boutons réinitialiser / `clearAll` → `clearDashboardCache()`.
 
 ## Charts & KPI briques
 
 - Lib autorisée : **Recharts** (`recharts` dans `package.json`) pour les graphiques reporting / trésorerie.
 - Reporting : `src/components/reporting/` · Trésorerie : `src/components/tresorerie/` (KPI cards, formatters dédiés — pas d’import croisé entre briques).
+- Surcouches démo produit : `src/components/poc/` + `src/lib/poc/` — playbook `poc-wow.md`.
+  - Brief & alertes : tiroir `InsightsDrawer` (bouton header page).
+  - Vision produit post-POC : `PostPocInfoButton` dans `AppHeader`.
+  - Assistant IA flottant, agrandissable.
 - Couleurs : dérivées des tokens Murpro (`--primary`, `--accent`, `--surface`) — pas de palette « SaaS purple » inventée.
 
 ## Tokens
@@ -63,7 +68,7 @@ Utiliser `text-success` / `text-warning` / `text-danger` (Tailwind) — pas de `
 
 - ❌ Introduire shadcn/UI lib sans demande — le socle est Tailwind tokens only.
 - ❌ Dark mode system (`prefers-color-scheme`) qui écrase la charte Murpro.
-- ❌ Persister le context (localStorage) « pour le confort ».
+- ❌ Persister côté serveur / BDD. Cache `localStorage` métier = OK (POC, reset explicite).
 - ❌ Mettre la logique de parsing Excel dans un composant UI.
 - ❌ Afficher des références cellules / lignes Excel / « hors AT » dans l’UI utilisateur.
 

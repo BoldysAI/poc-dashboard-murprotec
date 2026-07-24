@@ -4,14 +4,25 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
-  useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import type { ReportingBundle, ReportingData, TresorerieData } from "@/types/dashboard";
 import { defaultAgenceId } from "@/lib/reporting/default-agence";
+import {
+  clearDashboardCache,
+  getDashboardCacheServerSnapshot,
+  getDashboardCacheSnapshot,
+  hydrateDashboardCacheFromStorage,
+  replaceDashboardCache,
+  subscribeDashboardCache,
+} from "@/lib/dashboard-storage";
 
 type DashboardDataContextValue = {
+  /** false tant que le cache local n’a pas été lu (évite un flash empty state). */
+  isCacheReady: boolean;
   tresorerieData: TresorerieData | null;
   reportingBundle: ReportingBundle | null;
   selectedAgenceId: string | null;
@@ -27,52 +38,73 @@ const DashboardDataContext = createContext<DashboardDataContextValue | null>(
 );
 
 export function DashboardDataProvider({ children }: { children: ReactNode }) {
-  const [tresorerieData, setTresorerieData] = useState<TresorerieData | null>(
-    null,
+  const cache = useSyncExternalStore(
+    subscribeDashboardCache,
+    getDashboardCacheSnapshot,
+    getDashboardCacheServerSnapshot,
   );
-  const [reportingBundle, setReportingBundleState] =
-    useState<ReportingBundle | null>(null);
-  const [selectedAgenceId, setSelectedAgenceIdState] = useState<string | null>(
-    null,
-  );
+
+  useEffect(() => {
+    hydrateDashboardCacheFromStorage();
+  }, []);
+
+  const setTresorerieData = useCallback((data: TresorerieData | null) => {
+    const current = getDashboardCacheSnapshot();
+    replaceDashboardCache({
+      tresorerie: data,
+      reporting: current.reporting,
+      selectedAgenceId: current.selectedAgenceId,
+    });
+  }, []);
 
   const setReportingBundle = useCallback((data: ReportingBundle | null) => {
-    setReportingBundleState(data);
+    const current = getDashboardCacheSnapshot();
     if (data === null || data.agencies.length === 0) {
-      setSelectedAgenceIdState(null);
+      replaceDashboardCache({
+        tresorerie: current.tresorerie,
+        reporting: null,
+        selectedAgenceId: null,
+      });
       return;
     }
-    setSelectedAgenceIdState(defaultAgenceId(data));
+    replaceDashboardCache({
+      tresorerie: current.tresorerie,
+      reporting: data,
+      selectedAgenceId: defaultAgenceId(data),
+    });
   }, []);
 
-  const setSelectedAgenceId = useCallback(
-    (id: string) => {
-      if (!reportingBundle) return;
-      const exists = reportingBundle.agencies.some((a) => a.agenceId === id);
-      if (exists) setSelectedAgenceIdState(id);
-    },
-    [reportingBundle],
-  );
+  const setSelectedAgenceId = useCallback((id: string) => {
+    const current = getDashboardCacheSnapshot();
+    if (!current.reporting) return;
+    const exists = current.reporting.agencies.some((a) => a.agenceId === id);
+    if (!exists) return;
+    replaceDashboardCache({
+      tresorerie: current.tresorerie,
+      reporting: current.reporting,
+      selectedAgenceId: id,
+    });
+  }, []);
 
   const clearAll = useCallback(() => {
-    setTresorerieData(null);
-    setReportingBundleState(null);
-    setSelectedAgenceIdState(null);
+    clearDashboardCache();
   }, []);
 
-  const selectedReportingData = useMemo(() => {
-    if (!reportingBundle || !selectedAgenceId) return null;
+  const selectedReportingData = useMemo((): ReportingData | null => {
+    if (!cache.reporting || !cache.selectedAgenceId) return null;
     return (
-      reportingBundle.agencies.find((a) => a.agenceId === selectedAgenceId) ??
-      null
+      cache.reporting.agencies.find(
+        (a) => a.agenceId === cache.selectedAgenceId,
+      ) ?? null
     );
-  }, [reportingBundle, selectedAgenceId]);
+  }, [cache.reporting, cache.selectedAgenceId]);
 
   const value = useMemo(
     () => ({
-      tresorerieData,
-      reportingBundle,
-      selectedAgenceId,
+      isCacheReady: cache.hydrated,
+      tresorerieData: cache.tresorerie,
+      reportingBundle: cache.reporting,
+      selectedAgenceId: cache.selectedAgenceId,
       selectedReportingData,
       setTresorerieData,
       setReportingBundle,
@@ -80,10 +112,12 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
       clearAll,
     }),
     [
-      tresorerieData,
-      reportingBundle,
-      selectedAgenceId,
+      cache.hydrated,
+      cache.tresorerie,
+      cache.reporting,
+      cache.selectedAgenceId,
       selectedReportingData,
+      setTresorerieData,
       setReportingBundle,
       setSelectedAgenceId,
       clearAll,

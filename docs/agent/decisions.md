@@ -207,3 +207,38 @@ Vérifié sur fichiers réels : lignes masquées 10/52 lisibles ; Z45/Z15/Z22/L2
 - Option **Tous les onglets** : une `.print-page` par agence (`break-after: page`).
 - Nom PDF suggéré via `document.title` (`src/lib/pdf-filename.ts`) : `Reporting-{agenceCible}` pour une agence ; `Reporting-Financier` pour tous (pas de nom d’onglet).
 - Source : demande session.
+
+## 2026-07-21 · [P] · Surcouches POC wow (brief, alertes, assistant, radar, fake doors)
+
+- Pack démo séduction hors AT métier : narration + pilotage + vision produit.
+- **Brief du mois** + **centre d’alertes** : dérivés des données session (seuils / deltas déjà présents) — `src/lib/poc/{brief,alerts}.ts`.
+- **Assistant IA** : widget flottant ; réponses **déterministes** (pas de LLM / pas de clé API) sur chiffres chargés + questions suggérées — `src/lib/poc/assistant.ts`.
+- **Radar multi-agences** : Recharts Radar, indices relatifs 0–100 (marge, CA, profit, taux OK, var N-1) — `AgencesRadarChart`.
+- **Fake doors** : ERP, email programmé, export PPT — modales teaser « Aperçu produit ».
+- Playbook : `docs/agent/poc-wow.md`. Aucune persistance, aucun nouveau mapping Excel.
+- Source : plan features POC wow (pack recommandé) + instruction session.
+
+## 2026-07-21 · [P] · Assistant IA branché OpenAI (clé serveur)
+
+- `POST /api/assistant` : Chat Completions (`gpt-4o-mini` par défaut, `OPENAI_MODEL` surchargeable).
+- Clé uniquement dans `.env.local` (`OPENAI_API_KEY`) — jamais client / jamais commit (`.gitignore` `.env*` + exception `.env.example`).
+- Contexte LLM = JSON compact session (`src/lib/poc/llm-context.ts`) ; garde-fou prompt « n’invente pas un chiffre ».
+- Fallback déterministe (`answerAssistantQuestion`) si clé absente ou erreur API.
+- Source : clé fournie en session + upgrade pack wow.
+
+## 2026-07-21 · [P] · Wow hors flux dashboard + Vision produit + chat agrandi
+
+- Brief & alertes sortis du corps des pages → bouton **Brief & alertes** + tiroir `InsightsDrawer` (badge nb alertes).
+- Fake doors barre retirée → **Vision produit** (`PostPocInfoButton` dans `AppHeader`) : catalogue post-POC avec explication par feature.
+- Radar multi-agences **retiré** (illisibilité).
+- Assistant IA : mode agrandi (plein panneau) via icône dans le header du chat.
+- Source : feedback session UX démo.
+
+## 2026-07-21 · [P] · Cache localStorage des dashboards (survit au refresh)
+
+- Demande explicite session : un refresh ne doit plus effacer les données ; wipe = reset UI uniquement.
+- `src/lib/dashboard-storage.ts` : clé `murprotec-dashboard-cache-v1` (trésorerie + reporting + agence sélectionnée).
+- `DashboardDataProvider` hydrate au mount (`isCacheReady`) puis réécrit le cache à chaque changement ; `clearAll` / set null → `clearDashboardCache()`.
+- AT §4.3 (pas de BDD / pas de fichiers serveur) respectée — persistance = navigateur uniquement, confort POC.
+- Copy reset : précise l’effacement du cache navigateur.
+- Source : instruction développeur session.

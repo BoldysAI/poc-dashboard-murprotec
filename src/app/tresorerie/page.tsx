@@ -1,6 +1,8 @@
 "use client";
 
+import { useMemo } from "react";
 import { FileUpload } from "@/components/FileUpload";
+import { InsightsDrawer } from "@/components/poc/InsightsDrawer";
 import { ResetUploadButton } from "@/components/ResetUploadButton";
 import { CompositionDepensesBlock } from "@/components/tresorerie/CompositionDepensesBlock";
 import { ExportPdfButton } from "@/components/tresorerie/ExportPdfButton";
@@ -11,14 +13,36 @@ import { TresorerieEmptyPreview } from "@/components/tresorerie/TresorerieEmptyP
 import { TresorerieKpiRow } from "@/components/tresorerie/TresorerieKpiRow";
 import { TresoreriePrintSheet } from "@/components/tresorerie/TresoreriePrintSheet";
 import { useDashboardData } from "@/contexts/dashboard-data-context";
+import { buildTresorerieAlerts, sortAlerts } from "@/lib/poc/alerts";
+import { buildTresorerieBrief } from "@/lib/poc/brief";
 import type { TresorerieData } from "@/types/dashboard";
 
 export default function TresoreriePage() {
-  const { tresorerieData, setTresorerieData } = useDashboardData();
+  const { isCacheReady, tresorerieData, setTresorerieData } = useDashboardData();
   const periode =
     tresorerieData !== null
       ? parsePeriodeFromFilename(tresorerieData.fileName)
       : null;
+
+  const brief = useMemo(
+    () => (tresorerieData ? buildTresorerieBrief(tresorerieData) : null),
+    [tresorerieData],
+  );
+  const alerts = useMemo(
+    () =>
+      tresorerieData
+        ? sortAlerts(buildTresorerieAlerts(tresorerieData))
+        : [],
+    [tresorerieData],
+  );
+
+  if (!isCacheReady) {
+    return (
+      <section className="flex flex-1 flex-col gap-6 print:hidden" aria-busy>
+        <p className="text-sm text-primary/60">Chargement du cache…</p>
+      </section>
+    );
+  }
 
   return (
     <section className="flex flex-1 flex-col gap-6 print:gap-0">
@@ -47,11 +71,11 @@ export default function TresoreriePage() {
         </div>
         {tresorerieData !== null ? (
           <div className="flex flex-wrap items-center gap-2">
+            {brief ? (
+              <InsightsDrawer brief={brief} alerts={alerts} />
+            ) : null}
             <ExportPdfButton />
-            <ResetUploadButton
-              label="Charger un autre fichier"
-              onReset={() => setTresorerieData(null)}
-            />
+            <ResetUploadButton onReset={() => setTresorerieData(null)} />
           </div>
         ) : null}
       </header>
@@ -70,7 +94,6 @@ export default function TresoreriePage() {
         </div>
       ) : (
         <>
-          {/* Écran interactif — masqué à l’impression */}
           <div className="space-y-4 print:hidden">
             <TresorerieKpiRow data={tresorerieData} />
             <div className="grid gap-4 lg:grid-cols-2 lg:items-stretch">
@@ -87,7 +110,6 @@ export default function TresoreriePage() {
             />
           </div>
 
-          {/* Feuille PDF A4 paysage dédiée */}
           <TresoreriePrintSheet data={tresorerieData} periode={periode} />
         </>
       )}

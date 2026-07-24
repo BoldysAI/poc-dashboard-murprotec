@@ -10,7 +10,7 @@
 2. **Pays** = ligne 10 (fallback L8) ; normalisé **majuscules** ; **solde courant** = ligne 27 ; agrégats totaux en colonne **Z**.
 3. **Devise** = EUR tel quel — aucune conversion CHF / multi-devises (confirmé Client 16/07).
 4. **Recettes / dépenses** = mois courant uniquement (`Z22` / `Z15`) — pas de série multi-mois.
-5. Résultat → `TresorerieData` en mémoire via `setTresorerieData` — aucune persistance.
+5. Résultat → `TresorerieData` via `setTresorerieData` — cache navigateur jusqu’à reset.
 6. Totaux Z absents → `ParseError` ; composition Z16–20 et L27 société absents → **`0`** (décision session).
 
 ## Mapping cellules (CDC ✅)
@@ -42,12 +42,12 @@ Vérif fichier réel : `npx tsx scripts/verify-tresorerie.mts` (asset `docs/asse
 
 Ordre d’affichage (état chargé) :
 
-1. **Header** — titre « Dashboard Trésorerie », badge période dérivé du nom de fichier (`TRESOR 30 06 2026…` → `30/06/2026`), nom du fichier, actions : **Exporter en PDF** + **Charger un autre fichier**.
+1. **Header** — titre « Dashboard Trésorerie », badge période, fichier, actions : **Brief & alertes** (`InsightsDrawer`) + **Exporter en PDF** + **Réinitialiser**.
 2. **KPI** — `TresorerieKpiRow` (4 cartes).
-3. **Rangée médiane** `lg:grid-cols-2 lg:items-stretch` — `RepartitionPaysChart` | `CompositionDepensesBlock` (même hauteur ; composition remplit via liste postes).
-4. **Bas** — `RecettesDepensesBlock` : chaque colonne = total compact + bâtonnets (`xl:grid-cols-2`).
+3. **Rangée médiane** `lg:grid-cols-2 lg:items-stretch` — `RepartitionPaysChart` | `CompositionDepensesBlock`.
+4. **Bas** — `RecettesDepensesBlock` (`xl:grid-cols-2`).
 
-État vide : upload + `TresorerieEmptyPreview` (squelette KPI / pays / composition / bâtonnets, comme le reporting). Desktop prioritaire (1080p) — pas d’optimisation mobile poussée.
+État vide : upload + `TresorerieEmptyPreview`. Header app : **Vision produit**. Assistant IA flottant (agrandissable). Voir `poc-wow.md`.
 
 ## Export PDF (AT §7.1)
 

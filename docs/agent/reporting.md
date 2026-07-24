@@ -10,7 +10,7 @@
 2. **Lire, ne pas recalculer** les ratios déjà dans le fichier — sauf **nb de mois cahier de commande** = Attente ÷ (Cumul CA / mois écoulés) (🔶).
 3. **Mois courant** = colonne **B** ; ignorer mois vides (C→M à 0). N-1 = colonnes O / P / Q selon CDC.
 4. **Seuils** = onglet `Chiffres Clés` (col A libellés). Colonnes agence CK : C=`FLA W`, D=`FLA O`, E=`WAL E`, F=`WAL O`. Autres onglets → `chiffresClesDisponibles: false` (pilotage masqué).
-5. Résultat → `ReportingBundle` via `setReportingBundle` — aucune persistance. Sélection = `selectedAgenceId` (défaut `WAL O` si présent).
+5. Résultat → `ReportingBundle` via `setReportingBundle` — cache navigateur jusqu’à reset. Sélection = `selectedAgenceId` (défaut `WAL O` si présent).
 
 ## Mapping réel (CDC ✅ — structure CR commune)
 
@@ -55,12 +55,13 @@ Plages type « 15-18% » → `seuilMin`/`seuilMax` (warning dans la bande, dange
 
 ### Assemblage `/reporting` (ordre d’écran)
 
-1. En-tête : `agenceLibelle` de l’agence active + badge période ; barre `AgenceTabs`.
-2. Bénéfice + Variation (flags N-1 en haut).
-3. Taux clés (flags déviation au-dessus de la flottaison).
-4. Répartition CA puis charges / frais fixes / break-even.
+1. En-tête : `agenceLibelle` + badge période ; actions **Brief & alertes** (`InsightsDrawer`) / PDF / reset.
+2. Barre `AgenceTabs`.
+3. Bénéfice + Variation (flags N-1).
+4. Taux clés → répartition CA → charges / break-even.
 5. 🔶 Pilotage commercial (si CK) en bas.
-6. Export PDF : bouton → dialogue (une agence **ou** tous les onglets) → `ReportingPrintSheet` (1 page / onglet) + `window.print()` ; nom de fichier via `document.title` (`Reporting-{onglet}` ; tous = `Reporting-Financier`).
+6. Export PDF : dialogue agence / tous → `ReportingPrintSheet` + `window.print()` ; titre `Reporting-{onglet}` ou `Reporting-Financier`.
+7. Header app : **Vision produit** (`PostPocInfoButton`) — catalogue post-POC (hors flux dashboard).
 
 Métadonnées : WAL O = « Wallonie Ouest — Frameries » ; autres = CK row4 ou nom d’onglet.
 
