@@ -57,6 +57,7 @@ Règles absolues :
 poc-dashboard-murprotec/
 ├── AGENTS.md / CLAUDE.md
 ├── docs/
+│   ├── architecture.md  # doc technique plateforme (architecture)
 │   ├── CDC-POC-Dashboard-Financier.pdf
 │   ├── assets/          # logo + Excel de référence (ne pas parser en prod depuis docs/)
 │   └── agent/           # playbooks + decisions.md
