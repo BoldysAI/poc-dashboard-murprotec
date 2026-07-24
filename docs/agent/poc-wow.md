@@ -35,6 +35,7 @@ Redémarrer `npm run dev` après ajout / changement de clé.
 
 - Dashboard AT reste propre (KPI / charts uniquement).
 - `InsightsDrawer` : bouton avec badge nb alertes → panneau latéral Brief + Alertes.
+- Reporting : badge + liste = **toutes** les agences (`buildReportingBundleAlerts`) ; `AlertsCenter` = accordéons par agence (fermés par défaut).
 - `PostPocInfoButton` : modal catalogue (intégrations, diffusion, pilotage) avec explication par feature.
 - Pas de fake doors dispersées dans le flux principal.
 

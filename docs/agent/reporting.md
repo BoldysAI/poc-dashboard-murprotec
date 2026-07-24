@@ -10,7 +10,8 @@
 2. **Lire, ne pas recalculer** les ratios déjà dans le fichier — sauf **nb de mois cahier de commande** = Attente ÷ (Cumul CA / mois écoulés) (🔶).
 3. **Mois courant** = colonne **B** ; ignorer mois vides (C→M à 0). N-1 = colonnes O / P / Q selon CDC.
 4. **Seuils** = onglet `Chiffres Clés` (col A libellés). Colonnes agence CK : C=`FLA W`, D=`FLA O`, E=`WAL E`, F=`WAL O`. Autres onglets → `chiffresClesDisponibles: false` (pilotage masqué).
-5. Résultat → `ReportingBundle` via `setReportingBundle` — cache navigateur jusqu’à reset. Sélection = `selectedAgenceId` (défaut `WAL O` si présent).
+5. Résultat → `ReportingBundle` via `setReportingBundle` — cache navigateur jusqu’à reset. Sélection = `selectedAgenceId` (défaut = **premier onglet** de `agencies[]`).
+6. **Alertes reporting** = toutes les agences (`buildReportingBundleAlerts`) ; le tiroir les regroupe par agence (`AlertsCenter`).
 
 ## Mapping réel (CDC ✅ — structure CR commune)
 
@@ -120,7 +121,8 @@ UI : `src/components/reporting/*` (`AgenceTabs`, charts, cartes).
 
 - [x] Multi-onglets CR (hors CK / Synthèse) + soft-skip hors modèle
 - [x] CK C–F pour FLW/FLO/WAE/WAO ; pilotage conditionnel
-- [x] `AgenceTabs` + défaut WAL O
+- [x] `AgenceTabs` + défaut premier onglet (ordre Excel)
+- [x] Alertes multi-agences regroupées dans le tiroir
 - [x] Mois vides ignorés
 - [x] Un seul calcul autorisé : nb mois cahier de commande
 - [x] AT1–AT5 + 🔶 pilotage (si CK)

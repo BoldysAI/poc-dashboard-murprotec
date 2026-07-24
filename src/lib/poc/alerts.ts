@@ -15,19 +15,26 @@ export type PocAlert = {
   detail: string;
   /** Domaine pour filtrage UI */
   scope: "tresorerie" | "reporting";
+  /** Agence (reporting) — pour regroupement dans le centre d’alertes */
+  agenceId?: string;
+  agenceLabel?: string;
 };
 
 function reportingAlertsForAgency(data: ReportingData): PocAlert[] {
   const alerts: PocAlert[] = [];
-  const agence = data.agenceCible;
+  const agenceMeta = {
+    agenceId: data.agenceId,
+    agenceLabel: data.agenceCible,
+  };
 
   if (data.variationVsN1 < 0) {
     alerts.push({
       id: `var-${data.agenceId}`,
       severity: "danger",
-      title: `${agence} — variation vs N-1`,
+      title: "Variation vs N-1",
       detail: `Profit après impôts en baisse de ${formatEurSigned(data.variationVsN1)} par rapport à N-1.`,
       scope: "reporting",
+      ...agenceMeta,
     });
   }
 
@@ -36,7 +43,7 @@ function reportingAlertsForAgency(data: ReportingData): PocAlert[] {
     alerts.push({
       id: `taux-${data.agenceId}-${taux.nom}`,
       severity: taux.statut === "danger" ? "danger" : "warning",
-      title: `${agence} — ${taux.nom}`,
+      title: taux.nom,
       detail:
         taux.seuilMax !== null && taux.seuilMin !== null
           ? `Taux à ${formatPct(taux.valeur)} (fourchette ${formatPct(taux.seuilMin)}–${formatPct(taux.seuilMax)}).`
@@ -44,6 +51,7 @@ function reportingAlertsForAgency(data: ReportingData): PocAlert[] {
             ? `Taux à ${formatPct(taux.valeur)} (seuil ${formatPct(taux.seuil)}).`
             : `Taux à ${formatPct(taux.valeur)} hors zone attendue.`,
       scope: "reporting",
+      ...agenceMeta,
     });
   }
 
@@ -52,18 +60,20 @@ function reportingAlertsForAgency(data: ReportingData): PocAlert[] {
       alerts.push({
         id: `impayes-${data.agenceId}`,
         severity: "danger",
-        title: `${agence} — impayés`,
+        title: "Impayés",
         detail: `${formatEur(data.impayes.listeRouge)} en liste rouge (${formatMois(data.impayes.nbMois)} mois, seuil ${formatMois(data.impayes.seuil, 0)}).`,
         scope: "reporting",
+        ...agenceMeta,
       });
     }
     if (data.euroCoupon.valeur > data.euroCoupon.seuil) {
       alerts.push({
         id: `euro-${data.agenceId}`,
         severity: "danger",
-        title: `${agence} — euro / coupon`,
+        title: "Euro / coupon",
         detail: `Valeur ${formatEur(data.euroCoupon.valeur)} au-dessus du seuil ${formatEur(data.euroCoupon.seuil)}.`,
         scope: "reporting",
+        ...agenceMeta,
       });
     }
   }
@@ -107,14 +117,16 @@ export function buildTresorerieAlerts(data: TresorerieData): PocAlert[] {
   return alerts;
 }
 
-/** Alertes de l’agence active uniquement (écran reporting). */
+/** Alertes d’une seule agence (brief agence / assistant ciblé). */
 export function buildReportingAlerts(data: ReportingData): PocAlert[] {
   return reportingAlertsForAgency(data);
 }
 
-/** Toutes les agences du bundle — pour brief / assistant. */
+/** Toutes les agences du bundle — centre d’alertes reporting + brief / assistant. */
 export function buildReportingBundleAlerts(bundle: ReportingBundle): PocAlert[] {
-  return bundle.agencies.flatMap(reportingAlertsForAgency);
+  return bundle.agencies.flatMap((a) =>
+    sortAlerts(reportingAlertsForAgency(a)),
+  );
 }
 
 export function sortAlerts(alerts: PocAlert[]): PocAlert[] {

@@ -249,3 +249,9 @@ Vérifié sur fichiers réels : lignes masquées 10/52 lisibles ; Z45/Z15/Z22/L2
 - S’appuie sur `output: 'standalone'` déjà présent dans `next.config.ts` ; CMD = `node server.js`, port **3000**, `HOSTNAME=0.0.0.0`.
 - Secrets runtime injectés par Coolify (`OPENAI_API_KEY`, optionnel `OPENAI_MODEL`) — documentés dans `.env.example`. Pas de docker-compose (déploiement Git → Coolify).
 - Source : demande session déploiement VPS Coolify.
+
+## 2026-07-24 · [P] · Reporting — onglet défaut + alertes multi-agences
+
+- Défaut `selectedAgenceId` = premier onglet (`agencies[0]`), plus de préférence WAL O — `defaultAgenceId`.
+- Centre d’alertes reporting : toutes les agences (`buildReportingBundleAlerts`) ; UI `AlertsCenter` avec sections par agence (`agenceId` / `agenceLabel` sur `PocAlert`).
+- Source : feedback session UX.

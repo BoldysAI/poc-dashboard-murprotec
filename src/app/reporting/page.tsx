@@ -18,7 +18,7 @@ import { ReportingPrintSheet } from "@/components/reporting/ReportingPrintSheet"
 import { TauxClesTiles } from "@/components/reporting/TauxClesTiles";
 import { VariationGlobaleCard } from "@/components/reporting/VariationGlobaleCard";
 import { useDashboardData } from "@/contexts/dashboard-data-context";
-import { buildReportingAlerts, sortAlerts } from "@/lib/poc/alerts";
+import { buildReportingBundleAlerts } from "@/lib/poc/alerts";
 import { buildReportingBrief } from "@/lib/poc/brief";
 import { reportingPdfDocumentTitle } from "@/lib/pdf-filename";
 import type { ReportingBundle, ReportingData } from "@/types/dashboard";
@@ -51,8 +51,11 @@ export default function ReportingPage() {
     [data],
   );
   const alerts = useMemo(
-    () => (data ? sortAlerts(buildReportingAlerts(data)) : []),
-    [data],
+    () =>
+      reportingBundle
+        ? buildReportingBundleAlerts(reportingBundle)
+        : [],
+    [reportingBundle],
   );
 
   const printDatasets = useMemo(() => {
