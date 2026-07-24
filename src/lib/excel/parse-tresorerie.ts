@@ -14,10 +14,10 @@ import {
 
 /**
  * Parse le fichier trésorerie groupe (CDC Brique 1).
- * Entrée = Buffer en mémoire uniquement — aucune écriture disque.
+ * Entrée = buffer mémoire uniquement — aucune écriture disque.
  */
 export function parseTresorerie(
-  buffer: ArrayBuffer | Buffer,
+  buffer: ArrayBuffer | Uint8Array,
   fileName: string,
 ): TresorerieData {
   const workbook = readWorkbook(buffer);

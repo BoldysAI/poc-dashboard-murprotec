@@ -30,8 +30,8 @@
 
 ## Pattern — pipeline
 
-1. UI : `FileUpload` accept `.xls` → `POST /api/parse/tresorerie` (multipart `file`).
-2. Serveur : `src/lib/excel/parse-tresorerie.ts` via utilitaires `@/lib/excel` (`readWorkbook`, `detectLastCompanyColumn`).
+1. UI : `FileUpload` → `parseTresorerieFile` (navigateur, `ArrayBuffer` + SheetJS).
+2. Client : `src/lib/excel/parse-tresorerie.ts` via utilitaires `@/lib/excel` (`readWorkbook`, `detectLastCompanyColumn`).
 3. Colonnes sociétés dynamiques C → dernière avant Europe ; totaux colonne Z.
 4. `setTresorerieData` remplace intégralement l’état session.
 5. Export PDF A4 paysage : bouton **Exporter en PDF** → `window.print()` (CSS `@page landscape`) — voir § Export PDF ci-dessous.
@@ -104,7 +104,7 @@ Composant : `RecettesDepensesBlock` (section `border-2`) + `SocieteBarChart`.
 
 ## Structure
 
-Types : `src/types/dashboard.ts` (`TresorerieData`). Parser : `src/lib/excel/parse-tresorerie.ts`. Route : `src/app/api/parse/tresorerie/route.ts`. UI : `src/components/tresorerie/`.
+Types : `src/types/dashboard.ts` (`TresorerieData`). Parser : `src/lib/excel/parse-tresorerie.ts` · entrée : `parseTresorerieFile`. UI : `src/components/tresorerie/`.
 
 ## What not to do
 

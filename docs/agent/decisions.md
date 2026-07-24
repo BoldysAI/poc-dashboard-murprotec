@@ -255,3 +255,11 @@ Vérifié sur fichiers réels : lignes masquées 10/52 lisibles ; Z45/Z15/Z22/L2
 - Défaut `selectedAgenceId` = premier onglet (`agencies[0]`), plus de préférence WAL O — `defaultAgenceId`.
 - Centre d’alertes reporting : toutes les agences (`buildReportingBundleAlerts`) ; UI `AlertsCenter` avec sections par agence (`agenceId` / `agenceLabel` sur `PocAlert`).
 - Source : feedback session UX.
+
+## 2026-07-24 · [P] · Parsing Excel 100 % client (plus d’upload serveur)
+
+- Constat prod : `BENELUX*.xlsx` ~48 Mo dont ~47 Mo = Power Pivot (`xl/model/item.data`) ; le parse SheetJS est rapide (~150 ms), le goulot = transfert réseau vers le VPS.
+- `FileUpload` appelle `parseTresorerieFile` / `parseReportingFile` dans le navigateur (`ArrayBuffer` → `readWorkbook` `type: "array"`).
+- Routes `POST /api/parse/tresorerie|reporting` **retirées**. Seul `POST /api/assistant` reste côté serveur (clé OpenAI).
+- Aligné AT §4.3 (pas de fichiers serveur) ; bundle client inclut SheetJS — acceptable pour ce POC single-user.
+- Source : lenteur import reporting en prod Coolify + choix session (option parse client).

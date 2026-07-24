@@ -1,19 +1,20 @@
 "use client";
 
 import { useCallback, useId, useRef, useState, type DragEvent } from "react";
+import { ParseError } from "@/lib/excel/errors";
 
 type FileUploadProps = {
-  /** POST endpoint, e.g. /api/parse/tresorerie */
-  endpoint: string;
+  /** Parse 100 % navigateur (ArrayBuffer → SheetJS) — pas d’upload serveur. */
+  parseFile: (file: File) => Promise<unknown>;
   onSuccess: (data: unknown) => void;
   onError?: (message: string) => void;
   label?: string;
-  /** Hint only — does not filter the file picker (validation côté API). */
+  /** Hint only — does not filter the file picker (validation dans parseFile). */
   hint?: string;
 };
 
 export function FileUpload({
-  endpoint,
+  parseFile,
   onSuccess,
   onError,
   label = "Téléverser fichier",
@@ -38,39 +39,23 @@ export function FileUpload({
       setLoading(true);
       setError(null);
 
-      const formData = new FormData();
-      formData.append("file", file);
-
       try {
-        const res = await fetch(endpoint, {
-          method: "POST",
-          body: formData,
-        });
-        const body: unknown = await res.json().catch(() => null);
-
-        if (!res.ok) {
-          const msg =
-            body &&
-            typeof body === "object" &&
-            "error" in body &&
-            typeof (body as { error: unknown }).error === "string"
-              ? (body as { error: string }).error
-              : "Le fichier n'a pas pu être traité.";
-          reportError(msg);
-          return;
+        const data = await parseFile(file);
+        onSuccess(data);
+      } catch (err) {
+        if (err instanceof ParseError) {
+          reportError(err.message);
+        } else {
+          reportError(
+            "Le fichier n'a pas pu être traité. Vérifiez le format et réessayez.",
+          );
         }
-
-        onSuccess(body);
-      } catch {
-        reportError(
-          "Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.",
-        );
       } finally {
         setLoading(false);
         if (inputRef.current) inputRef.current.value = "";
       }
     },
-    [endpoint, onSuccess, reportError],
+    [onSuccess, parseFile, reportError],
   );
 
   const onFileChosen = useCallback(

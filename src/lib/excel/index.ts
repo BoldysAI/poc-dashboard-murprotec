@@ -21,3 +21,4 @@ export {
 } from "./sheet-utils";
 export { parseTresorerie } from "./parse-tresorerie";
 export { parseReporting } from "./parse-reporting";
+export { parseTresorerieFile, parseReportingFile } from "./parse-file";

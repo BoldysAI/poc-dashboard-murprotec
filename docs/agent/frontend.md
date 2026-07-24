@@ -27,7 +27,7 @@
 const { reportingBundle, setReportingBundle, selectedReportingData } =
   useDashboardData();
 <FileUpload
-  endpoint="/api/parse/reporting"
+  parseFile={parseReportingFile}
   onSuccess={(data) => setReportingBundle(data as ReportingBundle)}
 />
 // null → ReportingEmptyPreview ; bundle → AgenceTabs + dashboard agence active
@@ -36,8 +36,9 @@ const { reportingBundle, setReportingBundle, selectedReportingData } =
 - Composant : `src/components/FileUpload.tsx` (bouton + drag & drop).
 - Sans données : `TresorerieEmptyPreview` / `ReportingEmptyPreview` — même layout que le dashboard chargé, graphes / valeurs vides (pas de bloc gris plein).
 - Reporting chargé : `AgenceTabs` + `selectedReportingData` pour les blocs.
-- **Pas d’attribut `accept`** sur l’input : le sélecteur ne filtre pas par extension ; la validation format/structure est **côté API** (message d’erreur affiché).
-- Erreurs API : message JSON `{ error }` affiché à l’utilisateur — jamais de stack.
+- **Pas d’attribut `accept`** sur l’input : le sélecteur ne filtre pas par extension ; la validation format/structure est **dans `parseFile`** (message d’erreur affiché).
+- Erreurs : `ParseError.message` affiché à l’utilisateur — jamais de stack.
+- Parsing Excel **100 % navigateur** (`parseTresorerieFile` / `parseReportingFile`) — pas d’upload serveur (évite le transfert des .xlsx lourds type Power Pivot ~48 Mo).
 - Refresh navigateur = **conserve** le cache (`localStorage`, clé `murprotec-dashboard-cache-v1`) jusqu’à reset explicite.
 - Wipe : boutons réinitialiser / `clearAll` → `clearDashboardCache()`.
 

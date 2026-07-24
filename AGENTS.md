@@ -42,7 +42,7 @@ Règles absolues :
 | Style | Tailwind CSS v4, tokens Murpro dans `src/app/globals.css` |
 | État | React Context client — **mémoire session uniquement** |
 | BDD / Auth / ORM | **Aucun** (CDC / AT §4.3) |
-| Parsing Excel | **SheetJS `xlsx`** — routes `POST /api/parse/*` (mémoire, pas de disque) |
+| Parsing Excel | **SheetJS `xlsx`** — **côté navigateur** (`parseTresorerieFile` / `parseReportingFile`) ; mémoire, pas d’upload serveur |
 | Export PDF | `window.print()` + CSS `@page` A4 paysage (trésorerie + reporting) |
 | Déploiement | `output: 'standalone'` (`next.config.ts`) |
 | Qualité | ESLint (`eslint-config-next`), `tsc` via `next build` |

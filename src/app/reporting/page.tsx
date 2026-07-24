@@ -18,6 +18,7 @@ import { ReportingPrintSheet } from "@/components/reporting/ReportingPrintSheet"
 import { TauxClesTiles } from "@/components/reporting/TauxClesTiles";
 import { VariationGlobaleCard } from "@/components/reporting/VariationGlobaleCard";
 import { useDashboardData } from "@/contexts/dashboard-data-context";
+import { parseReportingFile } from "@/lib/excel";
 import { buildReportingBundleAlerts } from "@/lib/poc/alerts";
 import { buildReportingBrief } from "@/lib/poc/brief";
 import { reportingPdfDocumentTitle } from "@/lib/pdf-filename";
@@ -151,8 +152,8 @@ export default function ReportingPage() {
 
       <div className="print:hidden">
         <FileUpload
-          endpoint="/api/parse/reporting"
-          hint="Fichier Excel reporting attendu (.xlsx) — tout fichier peut être sélectionné ; le serveur valide le format."
+          parseFile={parseReportingFile}
+          hint="Fichier Excel reporting attendu (.xlsx) — tout fichier peut être sélectionné ; le format est contrôlé après sélection."
           onSuccess={(payload) =>
             setReportingBundle(payload as ReportingBundle)
           }

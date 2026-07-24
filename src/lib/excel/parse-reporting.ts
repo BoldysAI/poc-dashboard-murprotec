@@ -408,10 +408,10 @@ function resolveAgenceLibelle(
 
 /**
  * Parse le fichier reporting — tous les onglets CR sauf Chiffres Clés / Synthèse.
- * Soft-skip des onglets hors structure CR. Entrée = Buffer mémoire uniquement.
+ * Soft-skip des onglets hors structure CR. Entrée = buffer mémoire uniquement.
  */
 export function parseReporting(
-  buffer: ArrayBuffer | Buffer,
+  buffer: ArrayBuffer | Uint8Array,
   fileName: string,
 ): ReportingBundle {
   const workbook = readWorkbook(buffer);

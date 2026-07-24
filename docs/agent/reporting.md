@@ -95,15 +95,15 @@ Fourchette : `< min` → ok ; `min–max` → warning ; `> max` → danger. Seui
 
 ## Pattern — pipeline
 
-1. UI : `FileUpload` → `POST /api/parse/reporting`.
-2. Serveur : tous onglets CR (hors CK / Synthèse) → `ReportingBundle.agencies[]` ; CK C–F si mapping A3.
+1. UI : `FileUpload` → `parseReportingFile` (navigateur, `ArrayBuffer` + SheetJS).
+2. Client : tous onglets CR (hors CK / Synthèse) → `ReportingBundle.agencies[]` ; CK C–F si mapping A3.
 3. Seuils col A → flags ; seul calcul = nb mois cahier.
-4. `setReportingBundle` + `selectedAgenceId` (session).
+4. `setReportingBundle` + `selectedAgenceId` (session / localStorage).
 
 ## Structure
 
 Types : `ReportingBundle`, `ReportingData`, `ChiffresClesData`, `SeuilIndicateur`.
-Parser : `src/lib/excel/parse-reporting.ts`. Route : `src/app/api/parse/reporting/route.ts`.
+Parser : `src/lib/excel/parse-reporting.ts` · entrée fichier : `parseReportingFile` (`parse-file.ts`).
 UI : `src/components/reporting/*` (`AgenceTabs`, charts, cartes).
 
 ## What not to do

@@ -13,6 +13,7 @@ import { TresorerieEmptyPreview } from "@/components/tresorerie/TresorerieEmptyP
 import { TresorerieKpiRow } from "@/components/tresorerie/TresorerieKpiRow";
 import { TresoreriePrintSheet } from "@/components/tresorerie/TresoreriePrintSheet";
 import { useDashboardData } from "@/contexts/dashboard-data-context";
+import { parseTresorerieFile } from "@/lib/excel";
 import { buildTresorerieAlerts, sortAlerts } from "@/lib/poc/alerts";
 import { buildTresorerieBrief } from "@/lib/poc/brief";
 import type { TresorerieData } from "@/types/dashboard";
@@ -82,8 +83,8 @@ export default function TresoreriePage() {
 
       <div className="print:hidden">
         <FileUpload
-          endpoint="/api/parse/tresorerie"
-          hint="Fichier Excel trésorerie attendu (.xls) — tout fichier peut être sélectionné ; le serveur valide le format."
+          parseFile={parseTresorerieFile}
+          hint="Fichier Excel trésorerie attendu (.xls) — tout fichier peut être sélectionné ; le format est contrôlé après sélection."
           onSuccess={(data) => setTresorerieData(data as TresorerieData)}
         />
       </div>

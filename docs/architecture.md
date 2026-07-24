@@ -17,7 +17,7 @@ Application web **single-user** (Thomas Di Donato) pour visualiser deux tableaux
 | **Reporting Financier** | `/reporting` | Fichier `.xlsx` (CR multi-agences) | Compte de résultat par agence, PDF |
 
 Pas de base de données, pas d’authentification, pas d’ORM (CDC / AT §4.3).  
-Le serveur **parse** les fichiers en mémoire ; l’état métier vit **dans le navigateur**.
+Le navigateur **parse** les fichiers Excel en mémoire ; l’état métier vit **dans le navigateur**. Le serveur ne reçoit pas les Excel (sauf assistant IA optionnel).
 
 ---
 
@@ -34,21 +34,19 @@ Le serveur **parse** les fichiers en mémoire ; l’état métier vit **dans le 
 │                    DashboardDataProvider                 │              │
 │                    (React Context + localStorage)        │              │
 │                               │                          │              │
-│                    FileUpload ─┼── window.print() (PDF)   │              │
-└───────────────────────────────┼──────────────────────────┼──────────────┘
-                                │ multipart                │ JSON
-                                ▼                          ▼
+│         FileUpload ──► parse*File (SheetJS) ──► Context  │              │
+│                    window.print() (PDF)                  │              │
+└──────────────────────────────────────────────────────────┼──────────────┘
+                                                           │ JSON (contexte)
+                                                           ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                    Next.js 16 (Node, standalone)                        │
-│  POST /api/parse/tresorerie  →  parse-tresorerie.ts  → TresorerieData   │
-│  POST /api/parse/reporting   →  parse-reporting.ts   → ReportingBundle  │
-│  POST /api/assistant         →  OpenAI (optionnel) / fallback local     │
-│                                                                         │
-│  SheetJS (xlsx) — Buffer mémoire uniquement, aucun écriture disque      │
+│  POST /api/assistant  →  OpenAI (optionnel) / fallback déterministe     │
+│  (pas de route /api/parse — Excel 100 % client)                         │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Principe architectural** : monolithe Next.js (UI + API routes + parsing). Deux domaines métier **strictement séparés** (types, parsers, composants) ; une couche Excel partagée minimale (`src/lib/excel/`).
+**Principe architectural** : monolithe Next.js (UI + API assistant). Parsing Excel **dans le navigateur**. Deux domaines métier **strictement séparés** (types, parsers, composants) ; une couche Excel partagée minimale (`src/lib/excel/`).
 
 ---
 
@@ -60,7 +58,7 @@ Le serveur **parse** les fichiers en mémoire ; l’état métier vit **dans le 
 | Langage | **TypeScript** `strict` | Types métier dans `src/types/dashboard.ts` |
 | Styles | **Tailwind CSS v4** + tokens `@theme` | Charte Murpro (`globals.css`) |
 | Graphiques | **Recharts** | Donuts, barres, stacks |
-| Excel | **SheetJS `xlsx`** | Lecture `.xls` / `.xlsx` côté serveur |
+| Excel | **SheetJS `xlsx`** | Lecture `.xls` / `.xlsx` **côté navigateur** |
 | État | React Context + **`localStorage`** | Cache session jusqu’à reset explicite |
 | PDF | `window.print()` + CSS `@page` A4 paysage | Aucune lib PDF serveur |
 | Déploiement | `output: 'standalone'` + **Docker** | Coolify / VPS, port 3000 |
@@ -90,8 +88,6 @@ poc-dashboard-murprotec/
     │   ├── reporting/page.tsx
     │   ├── globals.css
     │   └── api/
-    │       ├── parse/tresorerie/route.ts
-    │       ├── parse/reporting/route.ts
     │       └── assistant/route.ts
     ├── components/
     │   ├── layout/                # AppHeader
@@ -121,14 +117,13 @@ poc-dashboard-murprotec/
 
 ```
 1. Utilisateur dépose un fichier (FileUpload, drag & drop)
-2. POST multipart /api/parse/{tresorerie|reporting}
-3. Route Handler :
+2. parseTresorerieFile | parseReportingFile (navigateur)
    - valide l’extension (.xls vs .xlsx)
-   - lit le fichier en Buffer (RAM)
-   - appelle parseTresorerie | parseReporting
-4. JSON → setTresorerieData | setReportingBundle (Context)
-5. Persistance navigateur (clé murprotec-dashboard-cache-v1)
-6. UI : KPI / charts ; empty preview si null
+   - lit le fichier en ArrayBuffer (RAM navigateur)
+   - appelle parseTresorerie | parseReporting (SheetJS type: "array")
+3. Résultat → setTresorerieData | setReportingBundle (Context)
+4. Persistance navigateur (clé murprotec-dashboard-cache-v1)
+5. UI : KPI / charts ; empty preview si null
 ```
 
 Le refresh navigateur **conserve** le cache. Seuls les boutons « Réinitialiser » / `clearAll` appellent `clearDashboardCache()`.
@@ -237,16 +232,14 @@ Sans données : **preview squelette** (`TresorerieEmptyPreview` / `ReportingEmpt
 
 ## 8. API HTTP
 
-Toutes les routes : `runtime = "nodejs"`.
+Seule route métier serveur : l’assistant IA. Le parsing Excel est **client** (`parse*File`).
 
 | Méthode | Chemin | Entrée | Sortie |
 |---|---|---|---|
-| `POST` | `/api/parse/tresorerie` | `multipart/form-data` champ `file` (`.xls`) | `TresorerieData` ou `{ error }` |
-| `POST` | `/api/parse/reporting` | `multipart/form-data` champ `file` (`.xlsx`) | `ReportingBundle` ou `{ error }` |
 | `POST` | `/api/assistant` | JSON : question, historique, snapshot session | Réponse texte (OpenAI ou fallback) |
 
-Erreurs métier : HTTP 4xx + `{ error: string }` (message FR, jamais de stack).  
-Aucun fichier Excel n’est écrit sur le disque serveur.
+Erreurs assistant : HTTP 4xx/5xx + message FR.  
+Aucun fichier Excel n’est envoyé ni écrit sur le disque serveur.
 
 ---
 
