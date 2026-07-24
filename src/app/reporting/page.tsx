@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { FileUpload } from "@/components/FileUpload";
+import { InsightsDrawer } from "@/components/poc/InsightsDrawer";
 import { ResetUploadButton } from "@/components/ResetUploadButton";
 import { AgenceTabs } from "@/components/reporting/AgenceTabs";
 import { BeneficeBrutCard } from "@/components/reporting/BeneficeBrutCard";
@@ -17,6 +18,8 @@ import { ReportingPrintSheet } from "@/components/reporting/ReportingPrintSheet"
 import { TauxClesTiles } from "@/components/reporting/TauxClesTiles";
 import { VariationGlobaleCard } from "@/components/reporting/VariationGlobaleCard";
 import { useDashboardData } from "@/contexts/dashboard-data-context";
+import { buildReportingAlerts, sortAlerts } from "@/lib/poc/alerts";
+import { buildReportingBrief } from "@/lib/poc/brief";
 import { reportingPdfDocumentTitle } from "@/lib/pdf-filename";
 import type { ReportingBundle, ReportingData } from "@/types/dashboard";
 
@@ -30,6 +33,7 @@ function periodeBadgeLabel(data: ReportingData): string {
 
 export default function ReportingPage() {
   const {
+    isCacheReady,
     reportingBundle,
     selectedAgenceId,
     selectedReportingData,
@@ -41,6 +45,15 @@ export default function ReportingPage() {
   const [printSelection, setPrintSelection] =
     useState<ReportingExportSelection | null>(null);
   const [shouldPrint, setShouldPrint] = useState(false);
+
+  const brief = useMemo(
+    () => (data ? buildReportingBrief(data) : null),
+    [data],
+  );
+  const alerts = useMemo(
+    () => (data ? sortAlerts(buildReportingAlerts(data)) : []),
+    [data],
+  );
 
   const printDatasets = useMemo(() => {
     if (!reportingBundle) return [];
@@ -78,6 +91,14 @@ export default function ReportingPage() {
     setShouldPrint(true);
   }
 
+  if (!isCacheReady) {
+    return (
+      <section className="flex flex-1 flex-col gap-6 print:hidden" aria-busy>
+        <p className="text-sm text-primary/60">Chargement du cache…</p>
+      </section>
+    );
+  }
+
   return (
     <section className="flex flex-1 flex-col gap-6 print:gap-0 sm:gap-8">
       <header className="flex flex-col gap-4 print:hidden sm:flex-row sm:items-start sm:justify-between">
@@ -108,6 +129,9 @@ export default function ReportingPage() {
         </div>
         {reportingBundle !== null && selectedAgenceId !== null ? (
           <div className="flex flex-wrap items-center gap-2">
+            {brief ? (
+              <InsightsDrawer brief={brief} alerts={alerts} />
+            ) : null}
             <ReportingExportPdfButton
               agencies={reportingBundle.agencies.map((a) => ({
                 id: a.agenceId,

@@ -71,8 +71,9 @@ export function ResetUploadButton({
               Êtes-vous sûr ?
             </h2>
             <p className="mt-2 text-sm text-primary/70">
-              Cette action efface les données chargées. Vous pourrez
-              téléverser un nouveau fichier ensuite.
+              Cette action efface les données chargées et le cache navigateur.
+              Un simple rafraîchissement de page ne suffit plus à les faire
+              disparaître. Vous pourrez téléverser un nouveau fichier ensuite.
             </p>
             <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <button

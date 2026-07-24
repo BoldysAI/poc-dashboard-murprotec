@@ -10,7 +10,7 @@
 ## 1. Le projet en une page
 
 POC web pour **MurProtec / Murpro Group** (utilisateur unique : Thomas Di Donato).
-Deux dashboards indépendants, alimentés par **upload Excel manuel**, sans persistance :
+Deux dashboards indépendants, alimentés par **upload Excel manuel** ; données en session navigateur (cache local jusqu’à reset) :
 
 1. **Trésorerie Groupe** (`/tresorerie`) — indicateurs de trésorerie consolidés.
 2. **Reporting Financier** (`/reporting`) — comptes de résultat multi-agences (onglets Excel, hors Chiffres Clés / Synthèse).
@@ -75,7 +75,7 @@ poc-dashboard-murprotec/
 ## 5. Règles d’or (non négociables)
 
 1. **Pas de BDD, pas d’auth, pas d’ORM** — utilisateur unique, accès direct (CDC / AT §4.3).
-2. **État = mémoire client uniquement** — `DashboardDataProvider` ; un refresh efface tout. Ne persiste rien (localStorage, cookies, fichiers serveur) sauf export PDF côté Client.
+2. **État client** — `DashboardDataProvider` ; **cache `localStorage`** jusqu’à réinitialisation explicite (boutons reset / `clearAll`). Pas de BDD ni fichiers serveur. Exception POC documentée dans `decisions.md` (AT §4.3 = pas de serveur ; confort démo = cache navigateur).
 3. **Deux briques indépendantes** — Trésorerie et Reporting ne partagent ni structure de données ni parsers. Pas de « modèle générique Excel » commun.
 4. **Montants** — traiter comme des nombres exacts issus du fichier ; **pas de conversion de devises** (tout en EUR, confirmé Client). Pas de `float` inventé pour des agrégats métier hors spec.
 5. **Périmètre AT** = 6 indicateurs trésorerie + 5 reporting. Éléments **🔶 post-AT** (composition dépenses, cahier de commande, impayés, euro/coupon) : intégrés au POC sur décision Yassine, **hors tarif AT** — ne les étends pas sans instruction.
@@ -118,7 +118,7 @@ npm run lint
 - [ ] `npm run build` sans erreur
 - [ ] Types stricts respectés ; pas de `any` injustifié
 - [ ] Aucune dépendance BDD/auth ajoutée
-- [ ] Comportement aligné CDC (mapping / empty state / pas de persistance)
+- [ ] Comportement aligné CDC (mapping / empty state) ; wipe données = reset explicite (pas le refresh)
 
 ---
 
@@ -132,7 +132,7 @@ npm run lint
 ## 10. Interdits
 
 - ❌ Introduire Prisma, Drizzle, NextAuth, Supabase Auth, etc.
-- ❌ Persister les données parsées (DB, localStorage « cache métier », fichiers serveur).
+- ❌ Persister côté serveur / BDD. Cache navigateur `localStorage` OK pour le confort POC (wipe = reset UI).
 - ❌ Inventer un mapping Excel non présent dans le CDC.
 - ❌ Fusionner les modèles Trésorerie et Reporting.
 - ❌ Modifier le CDC PDF / documents contractuels sans instruction.
@@ -150,4 +150,4 @@ Les fichiers de `docs/agent/` sont **vivants**. Tu les tiens à jour toi-même.
 - **Décisions d’architecture → `docs/agent/decisions.md`**, append-only et daté. N’écrase jamais une entrée passée.
 - **Le code fait foi** : si une doc `docs/agent/` contredit le code, corrige la doc.
 
-Living docs : `docs/agent/frontend.md`, `excel.md`, `tresorerie.md`, `reporting.md`, `decisions.md`.
+Living docs : `docs/agent/frontend.md`, `excel.md`, `tresorerie.md`, `reporting.md`, `poc-wow.md`, `decisions.md`.
