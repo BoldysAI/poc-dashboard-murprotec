@@ -25,13 +25,22 @@ const sheet = getSheet(workbook, "Tresorerie");
 const lastCompanyCol = detectLastCompanyColumn(sheet);
 
 const paysSum = data.parPays.reduce((s, p) => s + p.montantTotal, 0);
-const societeSum = data.parSociete.reduce((s, c) => s + c.soldeCourant, 0);
+const societeSumGeneral = data.parSociete.reduce(
+  (s, c) => s + c.soldeGeneral,
+  0,
+);
 const recettesSocietesSum = data.parSociete.reduce(
   (s, c) => s + c.recettesMois,
   0,
 );
 const depensesSocietesSum = data.parSociete.reduce(
   (s, c) => s + c.depensesMois,
+  0,
+);
+
+const espagneSocietes = data.parSociete.filter((s) => s.pays === "ESPAGNE");
+const espagneSoldeGeneralSum = espagneSocietes.reduce(
+  (s, c) => s + c.soldeGeneral,
   0,
 );
 
@@ -45,7 +54,7 @@ const summary = {
   pctPlacements: data.pctPlacements,
   soldeAu1erJanvier: data.soldeAu1erJanvier,
   variationDepuis1erJanvier: data.variationDepuis1erJanvier,
-  variationCheck: data.positionNette - data.soldeAu1erJanvier,
+  variationCheck: data.totalGeneral - data.soldeAu1erJanvier,
   totalRecettes: data.totalRecettes,
   totalDepenses: data.totalDepenses,
   recettesSocietesSum,
@@ -58,9 +67,10 @@ const summary = {
     data.compositionDepenses.dividendes +
     data.compositionDepenses.transfertsInternes,
   parPays: data.parPays,
-  paysSumEqualsSocieteSum: Math.abs(paysSum - societeSum) < 1e-6,
+  paysSumEqualsSocieteSumGeneral: Math.abs(paysSum - societeSumGeneral) < 1e-6,
   paysSum,
-  societeSum,
+  societeSumGeneral,
+  espagneSoldeGeneralSum,
   parSocieteSample: data.parSociete.slice(0, 5),
 };
 
@@ -71,11 +81,18 @@ const asserts: [string, boolean][] = [
   ["lastCompanyCol !== Z (colonnes dynamiques)", lastCompanyCol !== "Z"],
   ["au moins 1 société", data.parSociete.length > 0],
   [
-    "variation = Z27 − Z52",
+    "variation = Z43 − Z52",
     data.variationDepuis1erJanvier ===
-      data.positionNette - data.soldeAu1erJanvier,
+      data.totalGeneral - data.soldeAu1erJanvier,
   ],
-  ["parPays agrège les soldes sociétés", Math.abs(paysSum - societeSum) < 1e-6],
+  [
+    "variation attendue fichier ref (1234587.87)",
+    Math.abs(data.variationDepuis1erJanvier - 1234587.87) < 0.01,
+  ],
+  [
+    "parPays agrège soldeGeneral (L43)",
+    Math.abs(paysSum - societeSumGeneral) < 1e-6,
+  ],
   [
     "totaux Z alignés Excel (Z15/Z22/Z27/Z43)",
     data.totalDepenses === 897 &&
@@ -93,17 +110,19 @@ const asserts: [string, boolean][] = [
       summary.compositionSum === data.totalDepenses,
   ],
   [
-    "ESPAGNE unique (casse normalisée)",
+    "ESPAGNE unique (casse normalisée) + L43",
     !!espagne &&
       !data.parPays.some((p) => p.pays === "Espagne") &&
-      espagne.montantTotal === 32961 + 49934 + 25946,
+      Math.abs(espagne.montantTotal - espagneSoldeGeneralSum) < 1e-6 &&
+      espagneSocietes.length > 0,
   ],
   [
-    "parSociete expose recettesMois / depensesMois",
+    "parSociete expose recettesMois / depensesMois / soldeGeneral",
     data.parSociete.every(
       (s) =>
         typeof s.recettesMois === "number" &&
-        typeof s.depensesMois === "number",
+        typeof s.depensesMois === "number" &&
+        typeof s.soldeGeneral === "number",
     ),
   ],
 ];

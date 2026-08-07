@@ -56,6 +56,14 @@ export function AppHeader() {
             })}
           </nav>
           <PostPocInfoButton />
+          <form action="/api/auth/logout" method="post">
+            <button
+              type="submit"
+              className="cursor-pointer rounded px-3 py-2.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              Déconnexion
+            </button>
+          </form>
         </div>
       </div>
     </header>

@@ -7,7 +7,7 @@
 ## Golden rules
 
 1. **Source** = 1 onglet `Tresorerie` ; colonnes sociétés **variables** (C→Y) — ne pas hardcoder 23 sociétés (CDC).
-2. **Pays** = ligne 10 (fallback L8) ; normalisé **majuscules** ; **solde courant** = ligne 27 ; agrégats totaux en colonne **Z**.
+2. **Pays** = ligne 10 (fallback L8) ; normalisé **majuscules** ; **solde courant** = ligne 27 ; **solde général** (placements inclus) = ligne 43 ; agrégats totaux en colonne **Z**.
 3. **Devise** = EUR tel quel — aucune conversion CHF / multi-devises (confirmé Client 16/07).
 4. **Recettes / dépenses** = mois courant uniquement (`Z22` / `Z15`) — pas de série multi-mois.
 5. Résultat → `TresorerieData` via `setTresorerieData` — cache navigateur jusqu’à reset.
@@ -24,9 +24,9 @@
 | Total général | `Z43` = Z40 + Z27 — affiché en complément |
 | % Placements | `Z45` |
 | Solde au 01/01 | `Z52` (ligne 52 masquée), lu tel quel |
-| Variation depuis 01/01 | `Z27 − Z52` |
-| Répartition par pays | Agrégation colonnes C→avant Europe via ligne 10 × ligne 27 |
-| Recettes / dépenses par société | L22 / L15 par colonne (null → 0) ; totaux `Z22` / `Z15` |
+| Variation depuis 01/01 | `Z43 − Z52` (bases placements inclus) |
+| Répartition par pays | Agrégation colonnes C→avant Europe via ligne 10 × ligne 43 (`soldeGeneral`) |
+| Recettes / dépenses par société | L22 / L15 par colonne (null → 0) ; totaux `Z22` / `Z15` ; UI masque les sociétés à recettes **et** dépenses = 0 |
 
 ## Pattern — pipeline
 
@@ -54,7 +54,7 @@ Ordre d’affichage (état chargé) :
 - Bouton : `ExportPdfButton` → `window.print()`.
 - CSS : `@page { size: A4 landscape }` ; contenu = `TresoreriePrintSheet` (layout print dédié, pas un zoom de l’écran).
 - Bandeau print : logo Murpro + « Trésorerie au JJ/MM/AAAA ».
-- Graphiques print : donut PieChart taille fixe + barres horizontales CSS denses (toutes les sociétés) ; feuille volontairement plus compacte que l’écran web.
+- Graphiques print : donut PieChart taille fixe + barres horizontales CSS denses (**sociétés actives** : recettes ≠ 0 ou dépenses ≠ 0 — même filtre que l’écran) ; feuille volontairement plus compacte que l’écran web.
 - Masqué à l’impression : `AppHeader`, upload, boutons, dashboard écran.
 - Livrable : dialogue navigateur « Enregistrer au format PDF ». Pas de binaire headless.
 
@@ -75,7 +75,7 @@ Pattern (comme reporting Pilotage / Taux clés) : **une carte section** `border-
 
 Composant : `RepartitionPaysChart` (donut Recharts, calqué sur le CA reporting — pas d’import croisé).
 
-- Source : `parPays` (dynamique, pas de liste de pays en dur).
+- Source : `parPays` (dynamique, pas de liste de pays en dur) — base **placements inclus** (L43).
 - Donut **taille fixe** (~200–220px) — ne s’étire plus à la hauteur de la légende.
 - Carte `h-full` pour s’aligner avec la composition (stretch grille).
 - % = `montant / somme(montants > 0)` — 1 décimale ; légende dense + tooltip (pays, montant, %).
@@ -99,7 +99,8 @@ Composant : `RecettesDepensesBlock` (section `border-2`) + `SocieteBarChart`.
 - Chaque colonne : total compact (inline) puis bâtonnets — pas de rangée KPI séparée au-dessus.
 - Bâtonnets côte à côte en `xl:grid-cols-2` ; hauteur ~260–280px.
 - Libellé `marque — activité` (L8, fallback pays) pour distinguer les colonnes homonymes ; tronqué + tooltip complet.
-- Recettes : `ReferenceLine` = moyenne arithmétique des sociétés.
+- Masquage : société absente des deux graphiques si `recettesMois === 0` **et** `depensesMois === 0` (écran + PDF).
+- Recettes : `ReferenceLine` = moyenne arithmétique des sociétés affichées.
 - Dépenses : top 3 montants en accent `#EBCA09` (2 séries empilées `base`/`peak` — pas de `Cell`/`shape` custom, cassé sous Recharts 3).
 
 ## Structure

@@ -16,7 +16,8 @@ Application web **single-user** (Thomas Di Donato) pour visualiser deux tableaux
 | **Trésorerie Groupe** | `/tresorerie` | Fichier `.xls` (onglet `Tresorerie`) | KPI, répartition pays, recettes/dépenses, PDF |
 | **Reporting Financier** | `/reporting` | Fichier `.xlsx` (CR multi-agences) | Compte de résultat par agence, PDF |
 
-Pas de base de données, pas d’authentification, pas d’ORM (CDC / AT §4.3).  
+Pas de base de données, pas d’ORM (CDC / AT §4.3).  
+**Auth** (DC 08/2026) : cookie JWT httpOnly mono-utilisateur (`jose`) ; credentials en env `AUTH_USERNAME` / `AUTH_PASSWORD` / `AUTH_SECRET` ; garde `src/proxy.ts`.  
 Le navigateur **parse** les fichiers Excel en mémoire ; l’état métier vit **dans le navigateur**. Le serveur ne reçoit pas les Excel (sauf assistant IA optionnel).
 
 ---
@@ -41,8 +42,10 @@ Le navigateur **parse** les fichiers Excel en mémoire ; l’état métier vit *
                                                            ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                    Next.js 16 (Node, standalone)                        │
-│  POST /api/assistant  →  OpenAI (optionnel) / fallback déterministe     │
-│  (pas de route /api/parse — Excel 100 % client)                         │
+│  POST /api/auth/login|logout  →  cookie JWT httpOnly (jose)                 │
+│  POST /api/assistant  →  OpenAI (optionnel) / fallback déterministe         │
+│  src/proxy.ts  →  garde d’accès pages + API                                 │
+│  (pas de route /api/parse — Excel 100 % client)                             │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -232,13 +235,16 @@ Sans données : **preview squelette** (`TresorerieEmptyPreview` / `ReportingEmpt
 
 ## 8. API HTTP
 
-Seule route métier serveur : l’assistant IA. Le parsing Excel est **client** (`parse*File`).
+Routes serveur : auth + assistant IA. Le parsing Excel est **client** (`parse*File`).
 
 | Méthode | Chemin | Entrée | Sortie |
 |---|---|---|---|
+| `POST` | `/api/auth/login` | JSON : username, password | Cookie `murprotec_session` + `{ ok: true }` |
+| `POST` | `/api/auth/logout` | — | Clear cookie + redirect `/login` |
 | `POST` | `/api/assistant` | JSON : question, historique, snapshot session | Réponse texte (OpenAI ou fallback) |
 
-Erreurs assistant : HTTP 4xx/5xx + message FR.  
+Garde d’accès : `src/proxy.ts` — pages non authentifiées → `/login` ; `/api/*` (hors login) → 401.  
+Erreurs : HTTP 4xx/5xx + message FR.  
 Aucun fichier Excel n’est envoyé ni écrit sur le disque serveur.
 
 ---

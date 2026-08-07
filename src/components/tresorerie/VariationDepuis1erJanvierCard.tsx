@@ -9,7 +9,7 @@ type VariationDepuis1erJanvierCardProps = {
   variationDepuis1erJanvier: number;
 };
 
-/** Indicateur AT — variation = Z27 − Z52. */
+/** Indicateur AT — variation = Z43 − Z52. */
 export function VariationDepuis1erJanvierCard({
   variationDepuis1erJanvier,
 }: VariationDepuis1erJanvierCardProps) {

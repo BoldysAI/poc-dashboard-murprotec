@@ -10,6 +10,8 @@ export type TresorerieSociete = {
   activite: string;
   pays: string;
   soldeCourant: number;
+  /** Ligne 43 — total général placements inclus (null → 0) */
+  soldeGeneral: number;
   /** Ligne 22 — recettes du mois (null → 0) */
   recettesMois: number;
   /** Ligne 15 — dépenses du mois (null → 0) */

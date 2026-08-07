@@ -6,7 +6,7 @@
 
 ## Golden rules
 
-1. **Routes métier** = `/tresorerie` et `/reporting` uniquement ; `/` redirige vers `/tresorerie` (`src/app/page.tsx`).
+1. **Routes métier** = `/tresorerie` et `/reporting` ; `/` redirige vers `/tresorerie`. **Auth** = `/login` (groupe `(auth)`) ; dashboards sous `(dashboard)` avec header. Garde : `src/proxy.ts` (Next.js 16 Proxy).
 2. **Données dashboard** uniquement via `useDashboardData()` — ne crée pas un second store. Reporting = `reportingBundle` + `selectedAgenceId` / `selectedReportingData`.
 3. **Empty state** : trésorerie → `TresorerieEmptyPreview` ; reporting → `ReportingEmptyPreview` (squelette des sections / graphes vides — pas de bloc gris plein).
 4. **Charte** : tokens CSS Murpro (`primary`, `accent`, `surface`, `background`) — pas de hex hardcodés dans les composants.
@@ -15,11 +15,13 @@
 
 ## Pattern — layout & navigation
 
-1. Shell dans `src/app/layout.tsx` : font IBM Plex Sans, `DashboardDataProvider`, `AppHeader`, `<main>`.
-2. Nav dans `AppHeader` : liens `next/link`, état actif via `usePathname`.
-3. Logo : `public/logo_murpro_group.png` via `next/image` (~54 px de haut).
-4. Reporting : `AgenceTabs` sous l’en-tête (style `border-b-2 border-accent`) pour basculer d’agence.
-5. Export PDF reporting : `ReportingExportPdfButton` (une agence ou tous les onglets) → `ReportingPrintSheet` (page break / onglet) ; titre PDF = `Reporting-{onglet}` sauf export tous (`Reporting-Financier`).
+1. Root `src/app/layout.tsx` : font IBM Plex Sans + `DashboardDataProvider` (pas de chrome).
+2. Dashboard shell : `src/app/(dashboard)/layout.tsx` — `AppHeader`, `<main>`, `AiAssistant`.
+3. Login : `src/app/(auth)/login` — formulaire sans header ; cookie via `POST /api/auth/login`.
+4. Nav dans `AppHeader` : liens `next/link`, état actif via `usePathname` ; bouton **Déconnexion** → `POST /api/auth/logout`.
+5. Logo : `public/logo_murpro_group.png` via `next/image` (~54 px de haut).
+6. Reporting : `AgenceTabs` sous l’en-tête (style `border-b-2 border-accent`) pour basculer d’agence.
+7. Export PDF reporting : `ReportingExportPdfButton` (une agence ou tous les onglets) → `ReportingPrintSheet` (page break / onglet) ; titre PDF = `Reporting-{onglet}` sauf export tous (`Reporting-Financier`).
 
 ## Pattern — état session + upload
 

@@ -44,6 +44,7 @@ export function parseTresorerie(
     const activite = getStringOrEmpty(sheet, `${colonne}8`);
     const paysRaw = getStringOrEmpty(sheet, `${colonne}10`);
     const soldeCourant = getNumberOrNull(sheet, `${colonne}27`);
+    const soldeGeneral = getNumberOrNull(sheet, `${colonne}43`);
     const recettesMois = getNumberOrNull(sheet, `${colonne}22`);
     const depensesMois = getNumberOrNull(sheet, `${colonne}15`);
 
@@ -52,6 +53,7 @@ export function parseTresorerie(
       activite !== "" ||
       paysRaw !== "" ||
       soldeCourant !== null ||
+      soldeGeneral !== null ||
       recettesMois !== null ||
       depensesMois !== null;
 
@@ -65,6 +67,7 @@ export function parseTresorerie(
       activite,
       pays: (paysRaw || activite || "INCONNU").toUpperCase(),
       soldeCourant: soldeCourant ?? 0,
+      soldeGeneral: soldeGeneral ?? 0,
       recettesMois: recettesMois ?? 0,
       depensesMois: depensesMois ?? 0,
     });
@@ -78,7 +81,7 @@ export function parseTresorerie(
 
   const paysMap = new Map<string, number>();
   for (const s of parSociete) {
-    paysMap.set(s.pays, (paysMap.get(s.pays) ?? 0) + s.soldeCourant);
+    paysMap.set(s.pays, (paysMap.get(s.pays) ?? 0) + s.soldeGeneral);
   }
   const parPays: TresoreriePays[] = [...paysMap.entries()].map(
     ([pays, montantTotal]) => ({ pays, montantTotal }),
@@ -113,7 +116,7 @@ export function parseTresorerie(
     totalGeneral,
     pctPlacements,
     soldeAu1erJanvier,
-    variationDepuis1erJanvier: positionNette - soldeAu1erJanvier,
+    variationDepuis1erJanvier: totalGeneral - soldeAu1erJanvier,
     totalRecettes,
     totalDepenses,
     compositionDepenses: {

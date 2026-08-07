@@ -125,8 +125,16 @@ export function TresoreriePrintSheet({
     });
   }, [data.compositionDepenses, data.totalDepenses]);
 
+  const societesActives = useMemo(
+    () =>
+      data.parSociete.filter(
+        (s) => s.recettesMois !== 0 || s.depensesMois !== 0,
+      ),
+    [data.parSociete],
+  );
+
   const recettes = useMemo(() => {
-    const rows = [...data.parSociete]
+    const rows = [...societesActives]
       .map((s) => ({
         id: s.colonne,
         label: societeLabel(s),
@@ -139,10 +147,10 @@ export function TresoreriePrintSheet({
         ? 0
         : rows.reduce((s, r) => s + r.value, 0) / rows.length;
     return { rows, max, avg };
-  }, [data.parSociete]);
+  }, [societesActives]);
 
   const depenses = useMemo(() => {
-    const rows = [...data.parSociete]
+    const rows = [...societesActives]
       .map((s) => ({
         id: s.colonne,
         label: societeLabel(s),
@@ -152,7 +160,7 @@ export function TresoreriePrintSheet({
     const max = rows[0]?.value ?? 0;
     const peak = new Set(rows.slice(0, 3).map((r) => r.id));
     return { rows, max, peak };
-  }, [data.parSociete]);
+  }, [societesActives]);
 
   const tone = trendTone(data.variationDepuis1erJanvier);
 

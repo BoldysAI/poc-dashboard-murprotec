@@ -263,3 +263,25 @@ Vérifié sur fichiers réels : lignes masquées 10/52 lisibles ; Z45/Z15/Z22/L2
 - Routes `POST /api/parse/tresorerie|reporting` **retirées**. Seul `POST /api/assistant` reste côté serveur (clé OpenAI).
 - Aligné AT §4.3 (pas de fichiers serveur) ; bundle client inclut SheetJS — acceptable pour ce POC single-user.
 - Source : lenteur import reporting en prod Coolify + choix session (option parse client).
+
+## 2026-08-07 · [P] · Recette Trésorerie — bug variation + geste commercial points 2–3
+
+Email Thomas 04/08/2026 (« Demande d'adaptation ») ; spec `docs/spec/Spec-Adaptations-Tresorerie-Murprotec-2026-08.md`.
+
+1. **Bug (garantie Art. 7.2)** : `variationDepuis1erJanvier` = `Z43 − Z52` (placements inclus), plus `Z27 − Z52` (bases incohérentes).
+2. **Geste commercial** : répartition pays agrège `soldeGeneral` (L43) au lieu de `soldeCourant` (L27).
+3. **Geste commercial** : recettes/dépenses (écran + PDF) masquent les sociétés à recettes **et** dépenses = 0.
+4. Tri recettes décroissant : déjà en place — aucun code.
+5. Login / mot de passe : traité en DC séparée le même jour (voir entrée suivante).
+
+Arbitrage Yassine : points 2–3 inclus gratuitement dans ce 1er cycle de recette (geste commercial assumé).
+
+## 2026-08-07 · [P] · Auth mono-utilisateur (DC login)
+
+Demande Thomas 04/08 point 5 ; hors AT §4.4 / §8.4 — Demande de Changement livrée sur instruction Yassine.
+
+- Identifiant + mot de passe en env (`AUTH_USERNAME`, `AUTH_PASSWORD`) + `AUTH_SECRET` (≥ 32 chars) pour JWT HS256 (`jose`).
+- Cookie httpOnly `murprotec_session`, TTL 7 jours ; garde `src/proxy.ts` (Next.js 16 Proxy).
+- Routes : `/login`, `POST /api/auth/login`, `POST /api/auth/logout` ; bouton Déconnexion dans `AppHeader`.
+- Pas de BDD, pas de NextAuth, pas de reset MDP, pas de multi-comptes.
+- Fail-closed si env auth incomplète.

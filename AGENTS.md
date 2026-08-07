@@ -41,7 +41,8 @@ Règles absolues :
 | App | **Next.js** (App Router) + React + TypeScript strict |
 | Style | Tailwind CSS v4, tokens Murpro dans `src/app/globals.css` |
 | État | React Context client — **mémoire session uniquement** |
-| BDD / Auth / ORM | **Aucun** (CDC / AT §4.3) |
+| BDD / ORM | **Aucun** |
+| Auth | Cookie JWT httpOnly mono-utilisateur (`jose`) — DC 08/2026 ; env `AUTH_USERNAME` / `AUTH_PASSWORD` / `AUTH_SECRET` |
 | Parsing Excel | **SheetJS `xlsx`** — **côté navigateur** (`parseTresorerieFile` / `parseReportingFile`) ; mémoire, pas d’upload serveur |
 | Export PDF | `window.print()` + CSS `@page` A4 paysage (trésorerie + reporting) |
 | Déploiement | `output: 'standalone'` (`next.config.ts`) |
@@ -63,10 +64,12 @@ poc-dashboard-murprotec/
 │   └── agent/           # playbooks + decisions.md
 ├── public/logo_murpro_group.png
 ├── src/
-│   ├── app/             # routes : /, /tresorerie, /reporting
-│   ├── components/      # UI (layout, EmptyState, …)
+│   ├── app/             # routes : /(dashboard)/*, /(auth)/login, /api/*
+│   ├── components/      # UI (layout, auth, EmptyState, …)
 │   ├── contexts/        # DashboardDataProvider
+│   ├── lib/auth/        # session JWT + credentials env
 │   └── types/           # TresorerieData, ReportingData
+├── src/proxy.ts         # garde d’accès (Next.js 16 Proxy)
 ├── next.config.ts
 └── package.json
 ```
@@ -75,14 +78,14 @@ poc-dashboard-murprotec/
 
 ## 5. Règles d’or (non négociables)
 
-1. **Pas de BDD, pas d’auth, pas d’ORM** — utilisateur unique, accès direct (CDC / AT §4.3).
+1. **Pas de BDD, pas d’ORM** — utilisateur unique. **Auth** = session cookie JWT mono-user (DC 08/2026, hors AT initiale) ; pas de NextAuth / multi-comptes / reset MDP.
 2. **État client** — `DashboardDataProvider` ; **cache `localStorage`** jusqu’à réinitialisation explicite (boutons reset / `clearAll`). Pas de BDD ni fichiers serveur. Exception POC documentée dans `decisions.md` (AT §4.3 = pas de serveur ; confort démo = cache navigateur).
 3. **Deux briques indépendantes** — Trésorerie et Reporting ne partagent ni structure de données ni parsers. Pas de « modèle générique Excel » commun.
 4. **Montants** — traiter comme des nombres exacts issus du fichier ; **pas de conversion de devises** (tout en EUR, confirmé Client). Pas de `float` inventé pour des agrégats métier hors spec.
 5. **Périmètre AT** = 6 indicateurs trésorerie + 5 reporting. Éléments **🔶 post-AT** (composition dépenses, cahier de commande, impayés, euro/coupon) : intégrés au POC sur décision Yassine, **hors tarif AT** — ne les étends pas sans instruction.
 6. **Charte Murpro** — primary `#29235C`, accent `#EBCA09`, surface `#EDECF1`, blanc `#FFFFFF`. Logo : `public/logo_murpro_group.png`.
 7. **UI en français** — libellés, empty states, messages utilisateur.
-8. **Secrets** — aucun secret dans le code ; ce POC n’en a pas besoin.
+8. **Secrets** — aucun secret dans le code ; `AUTH_*` et `OPENAI_*` uniquement en env (Coolify / `.env.local`).
 9. **Ne code pas hors tâche** — socle d’abord ; upload/parsing/PDF seulement quand la story le demande.
 10. **Next.js 16** — APIs et conventions peuvent différer du training ; lire Context7 / `node_modules/next/dist/docs/` avant d’écrire du code framework.
 
@@ -118,7 +121,7 @@ npm run lint
 - [ ] `npm run lint` propre
 - [ ] `npm run build` sans erreur
 - [ ] Types stricts respectés ; pas de `any` injustifié
-- [ ] Aucune dépendance BDD/auth ajoutée
+- [ ] Aucune dépendance BDD/ORM ajoutée ; auth = cookie mono-user uniquement (`jose`)
 - [ ] Comportement aligné CDC (mapping / empty state) ; wipe données = reset explicite (pas le refresh)
 
 ---

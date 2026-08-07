@@ -55,13 +55,20 @@ export function RecettesDepensesBlock({
   totalRecettes,
   totalDepenses,
 }: RecettesDepensesBlockProps) {
-  const recettesRows = useMemo(
-    () => toRows(parSociete, "recettesMois", false),
+  const societesActives = useMemo(
+    () =>
+      parSociete.filter(
+        (s) => s.recettesMois !== 0 || s.depensesMois !== 0,
+      ),
     [parSociete],
   );
+  const recettesRows = useMemo(
+    () => toRows(societesActives, "recettesMois", false),
+    [societesActives],
+  );
   const depensesRows = useMemo(
-    () => toRows(parSociete, "depensesMois", true),
-    [parSociete],
+    () => toRows(societesActives, "depensesMois", true),
+    [societesActives],
   );
 
   return (
