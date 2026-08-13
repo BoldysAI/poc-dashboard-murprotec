@@ -2,7 +2,13 @@
  * Brief du mois POC — narration à partir des chiffres session (pas d’invention).
  */
 
-import type { ReportingBundle, ReportingData, TresorerieData } from "@/types/dashboard";
+import type {
+  ReportingBundle,
+  ReportingData,
+  ReportingMonthId,
+  TresorerieData,
+} from "@/types/dashboard";
+import { resolveBundleViews } from "@/lib/reporting/month-view";
 import {
   buildReportingAlerts,
   buildTresorerieAlerts,
@@ -160,7 +166,10 @@ export function buildReportingBrief(data: ReportingData): MonthBrief {
 }
 
 /** Brief consolidé multi-agences (assistant / vue groupe). */
-export function buildReportingBundleBrief(bundle: ReportingBundle): MonthBrief {
+export function buildReportingBundleBrief(
+  bundle: ReportingBundle,
+  monthId: ReportingMonthId | null = null,
+): MonthBrief {
   if (bundle.agencies.length === 0) {
     return {
       title: "Brief du mois",
@@ -170,10 +179,11 @@ export function buildReportingBundleBrief(bundle: ReportingBundle): MonthBrief {
     };
   }
 
-  const totalCa = bundle.agencies.reduce((s, a) => s + a.caTotal, 0);
-  const sorted = [...bundle.agencies].sort((a, b) => b.caTotal - a.caTotal);
+  const views = resolveBundleViews(bundle.agencies, monthId);
+  const totalCa = views.reduce((s, a) => s + a.caTotal, 0);
+  const sorted = [...views].sort((a, b) => b.caTotal - a.caTotal);
   const top = sorted[0];
-  const alertsCount = bundle.agencies.reduce(
+  const alertsCount = views.reduce(
     (n, a) => n + buildReportingAlerts(a).length,
     0,
   );
@@ -182,7 +192,7 @@ export function buildReportingBundleBrief(bundle: ReportingBundle): MonthBrief {
     {
       id: "nb",
       tone: "neutral",
-      text: `${bundle.agencies.length} agences chargées — CA consolidé du mois ${formatEur(totalCa)}.`,
+      text: `${views.length} agences chargées — CA consolidé du mois ${formatEur(totalCa)}.`,
     },
   ];
 
@@ -209,8 +219,8 @@ export function buildReportingBundleBrief(bundle: ReportingBundle): MonthBrief {
     bullets,
     conseil:
       alertsCount > 0
-        ? "Ouvrir le centre d’alertes puis basculer sur les agences concernées."
-        : "Comparer les agences via le radar pour identifier les leviers de performance.",
+        ? "Prioriser les agences en écart de seuils avant le prochain point COMEX."
+        : "Périmètre reporting stable — garder le suivi mensuel des marges et du cahier de commande.",
   };
 }
 

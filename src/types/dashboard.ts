@@ -136,6 +136,65 @@ export type ChiffresClesData = {
   euroCoupon: number;
 };
 
+/** Id de période UI : colonne Excel (B…M) ou vue consolidée. */
+export type ReportingMonthId = string;
+
+export const CONSOLIDE_MONTH_ID = "consolide" as const;
+
+export type ReportingMonthMeta = {
+  /** Colonne Excel = id UI (ex. "B", "H") */
+  id: ReportingMonthId;
+  /** En-tête L4 (ex. « Juillet ») */
+  label: string;
+  col: string;
+};
+
+/**
+ * Extrait CR d’un mois (mapping CDC, `monthCol` variable).
+ * N-1 et Chiffres Clés restent au niveau agence.
+ */
+export type ReportingMonthSlice = {
+  periodeMois: string;
+  repartitionCA: RepartitionCA[];
+  caTotal: number;
+  beneficeBrut: number;
+  margeBrute: number;
+  tauxClesBase: { nom: string; valeur: number }[];
+  structureCharges: StructureCharges;
+  profitApresImpots: number;
+  fraisFixes: number;
+  breakEven: number;
+};
+
+/**
+ * Agence parseée multi-mois — source de vérité du bundle.
+ * La vue écran dérive un `ReportingData` plat via `resolveReportingView`.
+ */
+export type ReportingAgency = {
+  agenceId: string;
+  agenceCible: string;
+  agenceLibelle: string;
+  chiffresClesDisponibles: boolean;
+  /** Mois non vides, ordre chronologique B→M */
+  months: ReportingMonthMeta[];
+  /** Clé = id colonne ("B", …) */
+  byMonth: Record<string, ReportingMonthSlice>;
+  /** Année déduite du fileName si possible */
+  periodeAnnee: number | null;
+  beneficeBrutN1: number;
+  variationVsN1: number;
+  moisEcoules: number;
+  cumulCA: number;
+  seuils: SeuilIndicateur[];
+  cahierCommande: CahierCommande;
+  impayes: Impayes;
+  euroCoupon: EuroCoupon;
+  fileName: string;
+};
+
+/**
+ * Vue plate affichée (mois unitaire ou consolidé) — AT1–AT5 / PDF / brief.
+ */
 export type ReportingData = {
   /** Nom d’onglet Excel (= id UI) */
   agenceId: string;
@@ -145,8 +204,10 @@ export type ReportingData = {
   agenceLibelle: string;
   /** true si colonne Chiffres Clés (C–F) disponible pour le pilotage 🔶 */
   chiffresClesDisponibles: boolean;
-  /** En-tête mois courant col B L4 (ex. « Janvier ») */
+  /** En-tête mois / libellé consolidé */
   periodeMois: string;
+  /** Id période active (`B`…`M` ou `consolide`) */
+  monthId: ReportingMonthId;
   /** Année déduite du fileName si possible (ex. 2026) */
   periodeAnnee: number | null;
   repartitionCA: RepartitionCA[];
@@ -156,13 +217,14 @@ export type ReportingData = {
   beneficeBrutN1: number;
   tauxCles: TauxCle[];
   structureCharges: StructureCharges;
-  /** Ligne 95, mois courant — profit après impôts */
+  /** Ligne 95 — profit après impôts (mois ou Σ consolidé) */
   profitApresImpots: number;
   fraisFixes: number;
   breakEven: number;
   /**
    * Variation vs N-1 = colonne P, ligne 95 (profit après impôts).
    * Choix documenté : synthèse P95 plutôt que P35 (bénéfice brut).
+   * Inchangé quelle que soit la période sélectionnée.
    */
   variationVsN1: number;
   /** Chiffres Clés B4 — mois écoulés (0 si CK indisponible) */
@@ -180,7 +242,7 @@ export type ReportingData = {
 /** Résultat parse multi-agences — une entrée par onglet CR retenu. */
 export type ReportingBundle = {
   fileName: string;
-  agencies: ReportingData[];
+  agencies: ReportingAgency[];
 };
 
 export type ParseApiError = {

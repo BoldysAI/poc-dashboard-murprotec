@@ -7,10 +7,10 @@
 ## Golden rules
 
 1. **Routes métier** = `/tresorerie` et `/reporting` ; `/` redirige vers `/tresorerie`. **Auth** = `/login` (groupe `(auth)`) ; dashboards sous `(dashboard)` avec header. Garde : `src/proxy.ts` (Next.js 16 Proxy).
-2. **Données dashboard** uniquement via `useDashboardData()` — ne crée pas un second store. Reporting = `reportingBundle` + `selectedAgenceId` / `selectedReportingData`.
+2. **Données dashboard** uniquement via `useDashboardData()` — ne crée pas un second store. Reporting = `reportingBundle` + `selectedAgenceId` / `selectedMonthId` / `selectedReportingData` (vue dérivée).
 3. **Empty state** : trésorerie → `TresorerieEmptyPreview` ; reporting → `ReportingEmptyPreview` (squelette des sections / graphes vides — pas de bloc gris plein).
 4. **Charte** : tokens CSS Murpro (`primary`, `accent`, `surface`, `background`) — pas de hex hardcodés dans les composants.
-5. **Accessibilité de base** : `lang="fr"`, focus visible, `aria-current` / `aria-selected` sur nav et onglets agence, contraste texte ≥ 4.5:1.
+5. **Accessibilité de base** : `lang="fr"`, focus visible, `aria-current` / `aria-selected` sur nav et onglets agence/période, contraste texte ≥ 4.5:1.
 6. **Copy UI métier** : titres et textes visibles = langage financier pour Thomas. **Jamais** de références Excel (cellules `Z15`, lignes, onglets), ni « hors AT », ni jargon technique de parsing. Le mapping CDC reste dans les playbooks / code, pas à l’écran.
 
 ## Pattern — layout & navigation
@@ -20,7 +20,7 @@
 3. Login : `src/app/(auth)/login` — formulaire sans header ; cookie via `POST /api/auth/login`.
 4. Nav dans `AppHeader` : liens `next/link`, état actif via `usePathname` ; bouton **Déconnexion** → `POST /api/auth/logout`.
 5. Logo : `public/logo_murpro_group.png` via `next/image` (~54 px de haut).
-6. Reporting : `AgenceTabs` sous l’en-tête (style `border-b-2 border-accent`) pour basculer d’agence.
+6. Reporting : `AgenceTabs` + `MoisTabs` sous l’en-tête (style `border-b-2 border-accent`) pour basculer d’agence et de période.
 7. Export PDF reporting : `ReportingExportPdfButton` (une agence ou tous les onglets) → `ReportingPrintSheet` (page break / onglet) ; titre PDF = `Reporting-{onglet}` sauf export tous (`Reporting-Financier`).
 
 ## Pattern — état session + upload
@@ -41,7 +41,7 @@ const { reportingBundle, setReportingBundle, selectedReportingData } =
 - **Pas d’attribut `accept`** sur l’input : le sélecteur ne filtre pas par extension ; la validation format/structure est **dans `parseFile`** (message d’erreur affiché).
 - Erreurs : `ParseError.message` affiché à l’utilisateur — jamais de stack.
 - Parsing Excel **100 % navigateur** (`parseTresorerieFile` / `parseReportingFile`) — pas d’upload serveur (évite le transfert des .xlsx lourds type Power Pivot ~48 Mo).
-- Refresh navigateur = **conserve** le cache (`localStorage`, clé `murprotec-dashboard-cache-v1`) jusqu’à reset explicite.
+- Refresh navigateur = **conserve** le cache (`localStorage`, clé `murprotec-dashboard-cache-v2`) jusqu’à reset explicite.
 - Wipe : boutons réinitialiser / `clearAll` → `clearDashboardCache()`.
 
 ## Charts & KPI briques

@@ -125,7 +125,7 @@ poc-dashboard-murprotec/
    - lit le fichier en ArrayBuffer (RAM navigateur)
    - appelle parseTresorerie | parseReporting (SheetJS type: "array")
 3. Résultat → setTresorerieData | setReportingBundle (Context)
-4. Persistance navigateur (clé murprotec-dashboard-cache-v1)
+4. Persistance navigateur (clé murprotec-dashboard-cache-v2)
 5. UI : KPI / charts ; empty preview si null
 ```
 
@@ -181,7 +181,7 @@ Défini dans `src/types/dashboard.ts`. Les deux briques **ne partagent pas** de 
 - Bundle = `{ fileName, agencies[] }` — un `ReportingData` par onglet CR retenu  
 - Onglets exclus : `Chiffres Clés`, `Synthèse` ; soft-skip des structures hors modèle  
 - Par agence : répartition CA, bénéfice/marge, taux clés, structure de charges, break-even, variation N-1 (P95), pilotage commercial si Chiffres Clés disponible (cols C–F)  
-- Sélection UI : `selectedAgenceId` (défaut = premier onglet de `agencies[]`)
+- Sélection UI : `selectedAgenceId` (défaut = premier onglet) + `selectedMonthId` (défaut = dernier mois rempli) ; vue = `resolveReportingView`
 
 ---
 
@@ -207,7 +207,8 @@ Défini dans `src/types/dashboard.ts`. Les deux briques **ne partagent pas** de 
 | `tresorerieData` / `setTresorerieData` | Brique 1 |
 | `reportingBundle` / `setReportingBundle` | Brique 2 |
 | `selectedAgenceId` / `setSelectedAgenceId` | Onglet agence actif |
-| `selectedReportingData` | Dérivé bundle + sélection |
+| `selectedMonthId` / `setSelectedMonthId` | Période (mois ou consolidé) |
+| `selectedReportingData` | Vue plate dérivée (agence + période) |
 | `isCacheReady` | Évite le flash empty state avant hydratation |
 | `clearAll` | Wipe cache navigateur |
 

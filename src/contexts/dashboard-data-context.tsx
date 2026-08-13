@@ -9,8 +9,18 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
-import type { ReportingBundle, ReportingData, TresorerieData } from "@/types/dashboard";
+import type {
+  ReportingBundle,
+  ReportingData,
+  ReportingMonthId,
+  TresorerieData,
+} from "@/types/dashboard";
 import { defaultAgenceId } from "@/lib/reporting/default-agence";
+import {
+  defaultMonthId,
+  resolveMonthIdForAgency,
+  resolveReportingView,
+} from "@/lib/reporting/month-view";
 import {
   clearDashboardCache,
   getDashboardCacheServerSnapshot,
@@ -26,10 +36,12 @@ type DashboardDataContextValue = {
   tresorerieData: TresorerieData | null;
   reportingBundle: ReportingBundle | null;
   selectedAgenceId: string | null;
+  selectedMonthId: ReportingMonthId | null;
   selectedReportingData: ReportingData | null;
   setTresorerieData: (data: TresorerieData | null) => void;
   setReportingBundle: (data: ReportingBundle | null) => void;
   setSelectedAgenceId: (id: string) => void;
+  setSelectedMonthId: (id: ReportingMonthId) => void;
   clearAll: () => void;
 };
 
@@ -54,6 +66,7 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
       tresorerie: data,
       reporting: current.reporting,
       selectedAgenceId: current.selectedAgenceId,
+      selectedMonthId: current.selectedMonthId,
     });
   }, []);
 
@@ -64,25 +77,46 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
         tresorerie: current.tresorerie,
         reporting: null,
         selectedAgenceId: null,
+        selectedMonthId: null,
       });
       return;
     }
+    const agenceId = defaultAgenceId(data);
+    const agency = data.agencies.find((a) => a.agenceId === agenceId)!;
     replaceDashboardCache({
       tresorerie: current.tresorerie,
       reporting: data,
-      selectedAgenceId: defaultAgenceId(data),
+      selectedAgenceId: agenceId,
+      selectedMonthId: defaultMonthId(agency),
     });
   }, []);
 
   const setSelectedAgenceId = useCallback((id: string) => {
     const current = getDashboardCacheSnapshot();
     if (!current.reporting) return;
-    const exists = current.reporting.agencies.some((a) => a.agenceId === id);
-    if (!exists) return;
+    const agency = current.reporting.agencies.find((a) => a.agenceId === id);
+    if (!agency) return;
     replaceDashboardCache({
       tresorerie: current.tresorerie,
       reporting: current.reporting,
       selectedAgenceId: id,
+      selectedMonthId: resolveMonthIdForAgency(agency, current.selectedMonthId),
+    });
+  }, []);
+
+  const setSelectedMonthId = useCallback((id: ReportingMonthId) => {
+    const current = getDashboardCacheSnapshot();
+    if (!current.reporting || !current.selectedAgenceId) return;
+    const agency = current.reporting.agencies.find(
+      (a) => a.agenceId === current.selectedAgenceId,
+    );
+    if (!agency) return;
+    const monthId = resolveMonthIdForAgency(agency, id);
+    replaceDashboardCache({
+      tresorerie: current.tresorerie,
+      reporting: current.reporting,
+      selectedAgenceId: current.selectedAgenceId,
+      selectedMonthId: monthId,
     });
   }, []);
 
@@ -92,12 +126,12 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
 
   const selectedReportingData = useMemo((): ReportingData | null => {
     if (!cache.reporting || !cache.selectedAgenceId) return null;
-    return (
-      cache.reporting.agencies.find(
-        (a) => a.agenceId === cache.selectedAgenceId,
-      ) ?? null
+    const agency = cache.reporting.agencies.find(
+      (a) => a.agenceId === cache.selectedAgenceId,
     );
-  }, [cache.reporting, cache.selectedAgenceId]);
+    if (!agency) return null;
+    return resolveReportingView(agency, cache.selectedMonthId);
+  }, [cache.reporting, cache.selectedAgenceId, cache.selectedMonthId]);
 
   const value = useMemo(
     () => ({
@@ -105,10 +139,12 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
       tresorerieData: cache.tresorerie,
       reportingBundle: cache.reporting,
       selectedAgenceId: cache.selectedAgenceId,
+      selectedMonthId: cache.selectedMonthId,
       selectedReportingData,
       setTresorerieData,
       setReportingBundle,
       setSelectedAgenceId,
+      setSelectedMonthId,
       clearAll,
     }),
     [
@@ -116,10 +152,12 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
       cache.tresorerie,
       cache.reporting,
       cache.selectedAgenceId,
+      cache.selectedMonthId,
       selectedReportingData,
       setTresorerieData,
       setReportingBundle,
       setSelectedAgenceId,
+      setSelectedMonthId,
       clearAll,
     ],
   );

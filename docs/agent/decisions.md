@@ -285,3 +285,14 @@ Demande Thomas 04/08 point 5 ; hors AT §4.4 / §8.4 — Demande de Changement l
 - Routes : `/login`, `POST /api/auth/login`, `POST /api/auth/logout` ; bouton Déconnexion dans `AppHeader`.
 - Pas de BDD, pas de NextAuth, pas de reset MDP, pas de multi-comptes.
 - Fail-closed si env auth incomplète.
+
+## 2026-08-12 · [P] · Reporting — sélection mois + vue consolidée
+
+Retour client : fichier jusqu’à juillet → seul janvier affiché (parse figé col B).
+
+- Parse multi-mois B→M (mois = header L4 + L14 ≠ 0) → `ReportingAgency.months` / `byMonth`.
+- Défaut UI = **dernier mois rempli** ; sélecteur `MoisTabs` + onglet **Consolidé**.
+- Consolidé : Σ montants ; marge = Σ bénéfice / Σ CA ; taux clés = moyenne ; N-1 (O/P) et Pilotage CK inchangés.
+- Cache `murprotec-dashboard-cache-v2` + `selectedMonthId` ; vue plate via `resolveReportingView`.
+- Spec : `docs/superpowers/specs/2026-08-12-reporting-mois-consolide-design.md`.
+- Source : appel client + instruction session Yassine.

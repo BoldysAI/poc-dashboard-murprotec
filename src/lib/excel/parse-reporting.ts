@@ -1,24 +1,28 @@
 import type { WorkBook, WorkSheet } from "xlsx";
 import type {
   ChiffresClesData,
-  RepartitionCA,
+  ReportingAgency,
   ReportingBundle,
-  ReportingData,
+  ReportingMonthMeta,
+  ReportingMonthSlice,
   SeuilIndicateur,
   StructureCharges,
-  TauxCle,
-  TauxCleStatut,
 } from "@/types/dashboard";
 import { CA_CATEGORIE_FALLBACKS } from "@/types/dashboard";
 import { ParseError } from "./errors";
 import { readWorkbook } from "./read-workbook";
 import {
+  colLetter,
   getCell,
+  getNumberOrNull,
   getSheet,
   getStringOrEmpty,
   parseSeuilWithUnit,
   requireNumber,
 } from "./sheet-utils";
+
+/** Colonnes mois CR : B (janvier) → M (décembre). */
+const MONTH_COLS = Array.from({ length: 12 }, (_, i) => colLetter(i + 1));
 
 /** Mapping A3 / nom d’onglet → colonne Chiffres Clés (C–F). */
 const CK_REGISTRY: {
@@ -71,26 +75,6 @@ const TAUX_ROWS = [38, 39, 40, 41, 42, 43] as const;
 const MONTH_HEADER =
   /janvier|fevrier|février|mars|avril|mai|juin|juillet|aout|août|septembre|octobre|novembre|decembre|décembre/i;
 
-/**
- * Rapprochements taux ↔ seuils Chiffres Clés (CDC n’explicite pas tous).
- * Documenté decisions.md 2026-07-17.
- */
-const TAUX_SEUIL_ALIASES: {
-  test: (n: string) => boolean;
-  find: RegExp;
-}[] = [
-  { test: (x) => x.includes("poseur"), find: /poseur/i },
-  { test: (x) => x.includes("publicit"), find: /publicit/i },
-  {
-    test: (x) => x.includes("commission") && x.includes("facture"),
-    find: /vendeur/i,
-  },
-  {
-    test: (x) => x.includes("surveyor") || x.includes("technicien"),
-    find: /technicien|surveyor|cout\s*technicien/i,
-  },
-];
-
 function isExcludedSheetName(name: string): boolean {
   const n = name.trim();
   return /chiffres\s*cl[eé]s/i.test(n) || /synth[eè]se/i.test(n);
@@ -118,49 +102,6 @@ function resolveCkEntry(sheetName: string, codeA3: string) {
         e.sheetNames.some((s) => s.toUpperCase() === name),
     ) ?? null
   );
-}
-
-function normLabel(s: string): string {
-  return s
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/\p{M}/gu, "")
-    .replace(/[^a-z0-9%]/g, "");
-}
-
-function matchSeuilEntry(
-  tauxNom: string,
-  seuils: SeuilIndicateur[],
-): SeuilIndicateur | null {
-  const n = normLabel(tauxNom);
-
-  for (const a of TAUX_SEUIL_ALIASES) {
-    if (a.test(n)) {
-      const hit = seuils.find((e) => a.find.test(e.indicateur));
-      if (hit) return hit;
-    }
-  }
-
-  const hit = seuils.find((e) => {
-    const el = normLabel(e.indicateur);
-    return n.includes(el) || el.includes(n.replace(/%/g, ""));
-  });
-  return hit ?? null;
-}
-
-function computeTauxStatut(
-  valeur: number,
-  entry: SeuilIndicateur | null,
-): TauxCleStatut {
-  if (!entry) return "neutral";
-  const { seuilMin, seuilMax, seuil } = entry;
-  if (seuilMin !== null && seuilMax !== null && seuilMin !== seuilMax) {
-    if (valeur < seuilMin) return "ok";
-    if (valeur <= seuilMax) return "warning";
-    return "danger";
-  }
-  const max = seuilMax ?? seuil;
-  return valeur <= max ? "ok" : "danger";
 }
 
 function findEuroCouponSeuil(seuils: SeuilIndicateur[]): number {
@@ -269,25 +210,10 @@ function extractSeuilsOnly(sheet: WorkSheet): SeuilIndicateur[] {
   return seuils;
 }
 
-type AgenceCrExtract = {
-  periodeMois: string;
-  repartitionCA: RepartitionCA[];
-  caTotal: number;
-  beneficeBrut: number;
-  margeBrute: number;
-  beneficeBrutN1: number;
-  tauxClesBase: { nom: string; valeur: number }[];
-  structureCharges: StructureCharges;
-  profitApresImpots: number;
-  fraisFixes: number;
-  breakEven: number;
-  variationVsN1: number;
-};
-
-function extractAgenceCr(
+function extractMonthSlice(
   sheet: WorkSheet,
-  monthCol: string = "B",
-): AgenceCrExtract {
+  monthCol: string,
+): ReportingMonthSlice {
   const col = monthCol.trim().toUpperCase();
 
   const periodeMois = getStringOrEmpty(sheet, `${col}4`) || "Mois courant";
@@ -304,7 +230,6 @@ function extractAgenceCr(
   const caTotal = requireNumber(sheet, `${col}14`, "TOTAL CA");
   const beneficeBrut = requireNumber(sheet, `${col}35`, "Bénéfice brut");
   const margeBrute = requireNumber(sheet, `${col}36`, "Marge brute");
-  const beneficeBrutN1 = requireNumber(sheet, "O35", "Bénéfice brut N-1");
 
   const tauxClesBase = TAUX_ROWS.map((row) => {
     const nom = getStringOrEmpty(sheet, `A${row}`) || `% ligne ${row}`;
@@ -326,11 +251,6 @@ function extractAgenceCr(
   );
   const fraisFixes = requireNumber(sheet, `${col}97`, "Frais fixes");
   const breakEven = requireNumber(sheet, `${col}99`, "Break-even");
-  const variationVsN1 = requireNumber(
-    sheet,
-    "P95",
-    "Variation vs N-1 (profit après impôts)",
-  );
 
   return {
     periodeMois,
@@ -338,14 +258,51 @@ function extractAgenceCr(
     caTotal,
     beneficeBrut,
     margeBrute,
-    beneficeBrutN1,
     tauxClesBase,
     structureCharges,
     profitApresImpots,
     fraisFixes,
     breakEven,
-    variationVsN1,
   };
+}
+
+function extractN1(sheet: WorkSheet): {
+  beneficeBrutN1: number;
+  variationVsN1: number;
+} {
+  return {
+    beneficeBrutN1: requireNumber(sheet, "O35", "Bénéfice brut N-1"),
+    variationVsN1: requireNumber(
+      sheet,
+      "P95",
+      "Variation vs N-1 (profit après impôts)",
+    ),
+  };
+}
+
+/** Mois dispo : header L4 reconnu + L14 non vide / ≠ 0. */
+function extractAvailableMonths(sheet: WorkSheet): {
+  months: ReportingMonthMeta[];
+  byMonth: Record<string, ReportingMonthSlice>;
+} {
+  const months: ReportingMonthMeta[] = [];
+  const byMonth: Record<string, ReportingMonthSlice> = {};
+
+  for (const col of MONTH_COLS) {
+    const header = getStringOrEmpty(sheet, `${col}4`);
+    if (!MONTH_HEADER.test(header)) continue;
+    const ca = getNumberOrNull(sheet, `${col}14`);
+    if (ca === null || ca === 0) continue;
+    try {
+      const slice = extractMonthSlice(sheet, col);
+      months.push({ id: col, label: header || slice.periodeMois, col });
+      byMonth[col] = slice;
+    } catch {
+      // Colonne incomplète → ignorer ce mois
+    }
+  }
+
+  return { months, byMonth };
 }
 
 /** Heuristique : en-tête mois en B4 (évite « Données pour Evolution… »). */
@@ -354,27 +311,8 @@ function looksLikeCrSheet(sheet: WorkSheet): boolean {
   return MONTH_HEADER.test(b4);
 }
 
-function buildTauxCles(
-  base: { nom: string; valeur: number }[],
-  seuils: SeuilIndicateur[],
-): TauxCle[] {
-  return base.map(({ nom, valeur }) => {
-    const entry = matchSeuilEntry(nom, seuils);
-    const statut = computeTauxStatut(valeur, entry);
-    return {
-      nom,
-      valeur,
-      seuil: entry?.seuil ?? null,
-      seuilMin: entry?.seuilMin ?? null,
-      seuilMax: entry?.seuilMax ?? null,
-      statut,
-      enDeviation: statut === "warning" || statut === "danger",
-    };
-  });
-}
-
 function emptyCkFields(seuils: SeuilIndicateur[]): Pick<
-  ReportingData,
+  ReportingAgency,
   | "moisEcoules"
   | "cumulCA"
   | "seuils"
@@ -409,6 +347,7 @@ function resolveAgenceLibelle(
 /**
  * Parse le fichier reporting — tous les onglets CR sauf Chiffres Clés / Synthèse.
  * Soft-skip des onglets hors structure CR. Entrée = buffer mémoire uniquement.
+ * Mois : colonnes B→M non vides ; défaut UI = dernier mois (hors parser).
  */
 export function parseReporting(
   buffer: ArrayBuffer | Uint8Array,
@@ -425,7 +364,7 @@ export function parseReporting(
   );
   const seuilsGlobaux = extractSeuilsOnly(ck);
 
-  const agencies: ReportingData[] = [];
+  const agencies: ReportingAgency[] = [];
 
   for (const sheetName of workbook.SheetNames) {
     if (isExcludedSheetName(sheetName)) continue;
@@ -433,11 +372,13 @@ export function parseReporting(
     const sheet = workbook.Sheets[sheetName];
     if (!sheet || !looksLikeCrSheet(sheet)) continue;
 
-    let cr: AgenceCrExtract;
+    const { months, byMonth } = extractAvailableMonths(sheet);
+    if (months.length === 0) continue;
+
+    let n1: { beneficeBrutN1: number; variationVsN1: number };
     try {
-      cr = extractAgenceCr(sheet, "B");
+      n1 = extractN1(sheet);
     } catch {
-      // Soft-skip : structure incomplète / hors modèle CR
       continue;
     }
 
@@ -448,7 +389,6 @@ export function parseReporting(
 
     let chiffresClesDisponibles = false;
     let ckFields = emptyCkFields(seuilsGlobaux);
-    let tauxCles = buildTauxCles(cr.tauxClesBase, seuilsGlobaux);
 
     if (ckEntry) {
       try {
@@ -468,9 +408,7 @@ export function parseReporting(
           },
           euroCoupon: { valeur: chiffres.euroCoupon, seuil: euroCouponSeuil },
         };
-        tauxCles = buildTauxCles(cr.tauxClesBase, chiffres.seuils);
       } catch {
-        // Colonne CK absente / incomplète → CR seul, pilotage masqué
         chiffresClesDisponibles = false;
       }
     }
@@ -480,19 +418,11 @@ export function parseReporting(
       agenceCible,
       agenceLibelle,
       chiffresClesDisponibles,
-      periodeMois: cr.periodeMois,
+      months,
+      byMonth,
       periodeAnnee,
-      repartitionCA: cr.repartitionCA,
-      caTotal: cr.caTotal,
-      beneficeBrut: cr.beneficeBrut,
-      margeBrute: cr.margeBrute,
-      beneficeBrutN1: cr.beneficeBrutN1,
-      tauxCles,
-      structureCharges: cr.structureCharges,
-      profitApresImpots: cr.profitApresImpots,
-      fraisFixes: cr.fraisFixes,
-      breakEven: cr.breakEven,
-      variationVsN1: cr.variationVsN1,
+      beneficeBrutN1: n1.beneficeBrutN1,
+      variationVsN1: n1.variationVsN1,
       ...ckFields,
       fileName,
     });

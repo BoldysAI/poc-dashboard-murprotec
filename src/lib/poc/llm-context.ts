@@ -10,6 +10,10 @@ import {
   sortAlerts,
 } from "./alerts";
 import type { AssistantContext } from "./assistant";
+import {
+  resolveBundleViews,
+  resolveReportingView,
+} from "@/lib/reporting/month-view";
 
 function compactAgence(a: ReportingData) {
   return {
@@ -17,6 +21,7 @@ function compactAgence(a: ReportingData) {
     code: a.agenceCible,
     libelle: a.agenceLibelle,
     periode: `${a.periodeMois}${a.periodeAnnee ? ` ${a.periodeAnnee}` : ""}`,
+    monthId: a.monthId,
     caTotal: a.caTotal,
     beneficeBrut: a.beneficeBrut,
     margeBrute: a.margeBrute,
@@ -61,7 +66,6 @@ export function buildLlmContextPayload(ctx: AssistantContext): {
         totalDepenses: ctx.tresorerie.totalDepenses,
         compositionDepenses: ctx.tresorerie.compositionDepenses,
         parPays: ctx.tresorerie.parPays,
-        // Top sociétés par solde (éviter payload trop gros)
         topSocietesParSolde: [...ctx.tresorerie.parSociete]
           .sort((a, b) => Math.abs(b.soldeCourant) - Math.abs(a.soldeCourant))
           .slice(0, 12)
@@ -78,13 +82,21 @@ export function buildLlmContextPayload(ctx: AssistantContext): {
 
   let reporting: Record<string, unknown> | null = null;
   if (ctx.reporting && ctx.reporting.agencies.length > 0) {
-    const selected =
+    const selectedAgency =
       ctx.reporting.agencies.find((a) => a.agenceId === ctx.selectedAgenceId) ??
       ctx.reporting.agencies[0];
+    const selected = selectedAgency
+      ? resolveReportingView(selectedAgency, ctx.selectedMonthId)
+      : null;
+    const views = resolveBundleViews(
+      ctx.reporting.agencies,
+      ctx.selectedMonthId,
+    );
     reporting = {
       fileName: ctx.reporting.fileName,
+      periodeActive: ctx.selectedMonthId,
       agenceActive: selected ? compactAgence(selected) : null,
-      toutesAgences: ctx.reporting.agencies.map((a) => ({
+      toutesAgences: views.map((a) => ({
         code: a.agenceCible,
         caTotal: a.caTotal,
         margeBrute: a.margeBrute,
@@ -106,10 +118,12 @@ export function buildLlmContextPayload(ctx: AssistantContext): {
               (x) => x.agenceId === ctx.selectedAgenceId,
             );
             return a
-              ? buildReportingAlerts(a)
-              : buildReportingBundleAlerts(ctx.reporting);
+              ? buildReportingAlerts(
+                  resolveReportingView(a, ctx.selectedMonthId),
+                )
+              : buildReportingBundleAlerts(ctx.reporting, ctx.selectedMonthId);
           })()
-        : buildReportingBundleAlerts(ctx.reporting)
+        : buildReportingBundleAlerts(ctx.reporting, ctx.selectedMonthId)
       : []),
   ]).map((a) => ({
     title: a.title,

@@ -3,7 +3,11 @@
  * Chemin nominal : `POST /api/assistant` + `OPENAI_API_KEY` (.env.local).
  */
 
-import type { ReportingBundle, TresorerieData } from "@/types/dashboard";
+import type {
+  ReportingBundle,
+  ReportingMonthId,
+  TresorerieData,
+} from "@/types/dashboard";
 import {
   buildReportingBundleAlerts,
   buildTresorerieAlerts,
@@ -15,11 +19,16 @@ import {
   buildTresorerieBrief,
 } from "./brief";
 import { formatEur, formatEurSigned, formatPct } from "./format";
+import {
+  resolveBundleViews,
+  resolveReportingView,
+} from "@/lib/reporting/month-view";
 
 export type AssistantContext = {
   tresorerie: TresorerieData | null;
   reporting: ReportingBundle | null;
   selectedAgenceId: string | null;
+  selectedMonthId: ReportingMonthId | null;
 };
 
 export type AssistantMessage = {
@@ -43,12 +52,13 @@ function normalize(q: string): string {
     .trim();
 }
 
-function selectedAgency(ctx: AssistantContext) {
+function selectedAgencyView(ctx: AssistantContext) {
   if (!ctx.reporting || !ctx.selectedAgenceId) return null;
-  return (
+  const agency =
     ctx.reporting.agencies.find((a) => a.agenceId === ctx.selectedAgenceId) ??
-    null
-  );
+    null;
+  if (!agency) return null;
+  return resolveReportingView(agency, ctx.selectedMonthId);
 }
 
 function answerResume(ctx: AssistantContext): string {
@@ -59,14 +69,14 @@ function answerResume(ctx: AssistantContext): string {
       `**Trésorerie** — ${b.bullets.map((x) => x.text).join(" ")} Conseil : ${b.conseil}`,
     );
   }
-  const agence = selectedAgency(ctx);
+  const agence = selectedAgencyView(ctx);
   if (agence) {
     const b = buildReportingBrief(agence);
     parts.push(
       `**Reporting (${agence.agenceCible})** — ${b.bullets.map((x) => x.text).join(" ")}`,
     );
   } else if (ctx.reporting) {
-    const b = buildReportingBundleBrief(ctx.reporting);
+    const b = buildReportingBundleBrief(ctx.reporting, ctx.selectedMonthId);
     parts.push(`**Reporting** — ${b.bullets.map((x) => x.text).join(" ")}`);
   }
   if (parts.length === 0) {
@@ -79,7 +89,7 @@ function answerAlertes(ctx: AssistantContext): string {
   const alerts = sortAlerts([
     ...(ctx.tresorerie ? buildTresorerieAlerts(ctx.tresorerie) : []),
     ...(ctx.reporting
-      ? buildReportingBundleAlerts(ctx.reporting)
+      ? buildReportingBundleAlerts(ctx.reporting, ctx.selectedMonthId)
       : []),
   ]);
   if (alerts.length === 0) {
@@ -101,9 +111,10 @@ function answerTopAgence(ctx: AssistantContext): string {
   if (!ctx.reporting || ctx.reporting.agencies.length === 0) {
     return "Le reporting n’est pas chargé. Uploadez le fichier multi-agences pour comparer les CA.";
   }
-  const sorted = [...ctx.reporting.agencies].sort(
-    (a, b) => b.caTotal - a.caTotal,
-  );
+  const sorted = resolveBundleViews(
+    ctx.reporting.agencies,
+    ctx.selectedMonthId,
+  ).sort((a, b) => b.caTotal - a.caTotal);
   const top = sorted[0];
   if (!top) return "Aucune agence disponible.";
   const runner = sorted[1];
@@ -132,7 +143,7 @@ function answerConseil(ctx: AssistantContext): string {
   if (!ctx.tresorerie && !ctx.reporting) {
     return "Commencez par charger les fichiers Excel du mois — ensuite je pourrai proposer une lecture priorisée.";
   }
-  const agence = selectedAgency(ctx);
+  const agence = selectedAgencyView(ctx);
   if (agence) {
     return buildReportingBrief(agence).conseil;
   }
@@ -140,13 +151,13 @@ function answerConseil(ctx: AssistantContext): string {
     return buildTresorerieBrief(ctx.tresorerie).conseil;
   }
   if (ctx.reporting) {
-    return buildReportingBundleBrief(ctx.reporting).conseil;
+    return buildReportingBundleBrief(ctx.reporting, ctx.selectedMonthId).conseil;
   }
   return "Surveillez les taux en écart et la variation vs N-1 avant de figurer le mois.";
 }
 
 function answerMarge(ctx: AssistantContext): string {
-  const agence = selectedAgency(ctx);
+  const agence = selectedAgencyView(ctx);
   if (!agence) {
     return "Sélectionnez une agence dans le reporting (après upload) pour commenter la marge.";
   }

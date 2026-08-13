@@ -1,18 +1,29 @@
 /**
  * Cache navigateur des dashboards (POC) — survit au refresh.
  * Wipe uniquement via set null / clearAll (boutons réinitialiser).
+ * v2 : reporting multi-mois + selectedMonthId.
  */
 
-import type { ReportingBundle, TresorerieData } from "@/types/dashboard";
+import type {
+  ReportingAgency,
+  ReportingBundle,
+  ReportingMonthId,
+  TresorerieData,
+} from "@/types/dashboard";
 import { defaultAgenceId } from "@/lib/reporting/default-agence";
+import {
+  defaultMonthId,
+  resolveMonthIdForAgency,
+} from "@/lib/reporting/month-view";
 
-export const DASHBOARD_STORAGE_KEY = "murprotec-dashboard-cache-v1";
+export const DASHBOARD_STORAGE_KEY = "murprotec-dashboard-cache-v2";
 
 export type DashboardCache = {
-  version: 1;
+  version: 2;
   tresorerie: TresorerieData | null;
   reporting: ReportingBundle | null;
   selectedAgenceId: string | null;
+  selectedMonthId: ReportingMonthId | null;
   /** true après lecture localStorage côté client */
   hydrated: boolean;
 };
@@ -22,10 +33,11 @@ type Listener = () => void;
 const listeners = new Set<Listener>();
 
 let memory: DashboardCache = {
-  version: 1,
+  version: 2,
   tresorerie: null,
   reporting: null,
   selectedAgenceId: null,
+  selectedMonthId: null,
   hydrated: false,
 };
 
@@ -37,40 +49,53 @@ function isTresorerieData(v: unknown): v is TresorerieData {
   return isRecord(v) && typeof v.fileName === "string" && Array.isArray(v.parSociete);
 }
 
+function isReportingAgency(v: unknown): v is ReportingAgency {
+  return (
+    isRecord(v) &&
+    typeof v.agenceId === "string" &&
+    Array.isArray(v.months) &&
+    isRecord(v.byMonth)
+  );
+}
+
 function isReportingBundle(v: unknown): v is ReportingBundle {
   return (
     isRecord(v) &&
     typeof v.fileName === "string" &&
-    Array.isArray(v.agencies)
+    Array.isArray(v.agencies) &&
+    v.agencies.every(isReportingAgency)
   );
 }
 
 const SERVER_SNAPSHOT: DashboardCache = {
-  version: 1,
+  version: 2,
   tresorerie: null,
   reporting: null,
   selectedAgenceId: null,
+  selectedMonthId: null,
   hydrated: false,
 };
 
 export function emptyDashboardCache(): DashboardCache {
   return {
-    version: 1,
+    version: 2,
     tresorerie: null,
     reporting: null,
     selectedAgenceId: null,
+    selectedMonthId: null,
     hydrated: false,
   };
 }
 
 function parseStored(raw: string): Omit<DashboardCache, "hydrated"> {
   const parsed: unknown = JSON.parse(raw);
-  if (!isRecord(parsed) || parsed.version !== 1) {
+  if (!isRecord(parsed) || parsed.version !== 2) {
     return {
-      version: 1,
+      version: 2,
       tresorerie: null,
       reporting: null,
       selectedAgenceId: null,
+      selectedMonthId: null,
     };
   }
   const tresorerie =
@@ -89,6 +114,10 @@ function parseStored(raw: string): Omit<DashboardCache, "hydrated"> {
     typeof parsed.selectedAgenceId === "string"
       ? parsed.selectedAgenceId
       : null;
+  const selectedMonthId: ReportingMonthId | null =
+    typeof parsed.selectedMonthId === "string"
+      ? parsed.selectedMonthId
+      : null;
   if (
     reporting &&
     selectedAgenceId &&
@@ -96,7 +125,13 @@ function parseStored(raw: string): Omit<DashboardCache, "hydrated"> {
   ) {
     selectedAgenceId = null;
   }
-  return { version: 1, tresorerie, reporting, selectedAgenceId };
+  return {
+    version: 2,
+    tresorerie,
+    reporting,
+    selectedAgenceId,
+    selectedMonthId,
+  };
 }
 
 function writeToLocalStorage(cache: Omit<DashboardCache, "hydrated">): void {
@@ -105,18 +140,22 @@ function writeToLocalStorage(cache: Omit<DashboardCache, "hydrated">): void {
     if (
       cache.tresorerie === null &&
       cache.reporting === null &&
-      cache.selectedAgenceId === null
+      cache.selectedAgenceId === null &&
+      cache.selectedMonthId === null
     ) {
       window.localStorage.removeItem(DASHBOARD_STORAGE_KEY);
+      // Nettoie l’ancienne clé v1 si présente
+      window.localStorage.removeItem("murprotec-dashboard-cache-v1");
       return;
     }
     window.localStorage.setItem(
       DASHBOARD_STORAGE_KEY,
       JSON.stringify({
-        version: 1,
+        version: 2,
         tresorerie: cache.tresorerie,
         reporting: cache.reporting,
         selectedAgenceId: cache.selectedAgenceId,
+        selectedMonthId: cache.selectedMonthId,
       }),
     );
   } catch {
@@ -128,6 +167,29 @@ function emit() {
   for (const listener of listeners) listener();
 }
 
+function syncSelection(
+  reporting: ReportingBundle | null,
+  selectedAgenceId: string | null,
+  selectedMonthId: ReportingMonthId | null,
+): {
+  selectedAgenceId: string | null;
+  selectedMonthId: ReportingMonthId | null;
+} {
+  if (!reporting || reporting.agencies.length === 0) {
+    return { selectedAgenceId: null, selectedMonthId: null };
+  }
+  let agenceId = selectedAgenceId;
+  if (
+    !agenceId ||
+    !reporting.agencies.some((a) => a.agenceId === agenceId)
+  ) {
+    agenceId = defaultAgenceId(reporting);
+  }
+  const agency = reporting.agencies.find((a) => a.agenceId === agenceId)!;
+  const monthId = resolveMonthIdForAgency(agency, selectedMonthId);
+  return { selectedAgenceId: agenceId, selectedMonthId: monthId };
+}
+
 /** Lecture initiale depuis localStorage (une fois côté client). */
 export function hydrateDashboardCacheFromStorage(): void {
   if (typeof window === "undefined") return;
@@ -137,25 +199,20 @@ export function hydrateDashboardCacheFromStorage(): void {
     const parsed = raw
       ? parseStored(raw)
       : {
-          version: 1 as const,
+          version: 2 as const,
           tresorerie: null,
           reporting: null,
           selectedAgenceId: null,
+          selectedMonthId: null,
         };
-    let selectedAgenceId = parsed.selectedAgenceId;
-    if (parsed.reporting && parsed.reporting.agencies.length > 0) {
-      if (
-        !selectedAgenceId ||
-        !parsed.reporting.agencies.some((a) => a.agenceId === selectedAgenceId)
-      ) {
-        selectedAgenceId = defaultAgenceId(parsed.reporting);
-      }
-    } else {
-      selectedAgenceId = null;
-    }
+    const selection = syncSelection(
+      parsed.reporting,
+      parsed.selectedAgenceId,
+      parsed.selectedMonthId,
+    );
     memory = {
       ...parsed,
-      selectedAgenceId,
+      ...selection,
       hydrated: true,
     };
   } catch {
@@ -181,13 +238,14 @@ export function subscribeDashboardCache(listener: Listener): () => void {
 }
 
 export function replaceDashboardCache(
-  next: Omit<DashboardCache, "hydrated" | "version"> & { version?: 1 },
+  next: Omit<DashboardCache, "hydrated" | "version"> & { version?: 2 },
 ): void {
   memory = {
-    version: 1,
+    version: 2,
     tresorerie: next.tresorerie,
     reporting: next.reporting,
     selectedAgenceId: next.selectedAgenceId,
+    selectedMonthId: next.selectedMonthId,
     hydrated: true,
   };
   writeToLocalStorage(memory);
@@ -199,9 +257,13 @@ export function clearDashboardCache(): void {
   if (typeof window !== "undefined") {
     try {
       window.localStorage.removeItem(DASHBOARD_STORAGE_KEY);
+      window.localStorage.removeItem("murprotec-dashboard-cache-v1");
     } catch {
       // ignore
     }
   }
   emit();
 }
+
+/** Helpers réexportés pour les call-sites d’upload. */
+export { defaultMonthId };

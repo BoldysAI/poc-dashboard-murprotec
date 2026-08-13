@@ -25,7 +25,7 @@ export function AiAssistant() {
   const titleId = useId();
   const inputId = useId();
   const listRef = useRef<HTMLDivElement>(null);
-  const { tresorerieData, reportingBundle, selectedAgenceId } =
+  const { tresorerieData, reportingBundle, selectedAgenceId, selectedMonthId } =
     useDashboardData();
 
   const [open, setOpen] = useState(false);
@@ -67,6 +67,7 @@ export function AiAssistant() {
           tresorerie: tresorerieData,
           reporting: reportingBundle,
           selectedAgenceId,
+          selectedMonthId,
         }),
       });
 

@@ -7,11 +7,18 @@
 ## Golden rules
 
 1. **Multi-agences** : tous les onglets CR du `.xlsx` **sauf** `Chiffres Clés` et `Synthèse` ; onglets UI via `AgenceTabs`. Soft-skip si structure hors CR (ex. Evolution).
-2. **Lire, ne pas recalculer** les ratios déjà dans le fichier — sauf **nb de mois cahier de commande** = Attente ÷ (Cumul CA / mois écoulés) (🔶).
-3. **Mois courant** = colonne **B** ; ignorer mois vides (C→M à 0). N-1 = colonnes O / P / Q selon CDC.
+2. **Lire, ne pas recalculer** les ratios déjà dans le fichier — sauf **nb de mois cahier de commande** = Attente ÷ (Cumul CA / mois écoulés) (🔶) **et** la vue consolidée (§ Mois).
+3. **Mois** = colonnes **B→M** ; mois disponible = header L4 reconnu + L14 ≠ 0/vide. N-1 = colonnes O / P / Q (partagé, indépendant du mois). Défaut UI = **dernier mois rempli**.
 4. **Seuils** = onglet `Chiffres Clés` (col A libellés). Colonnes agence CK : C=`FLA W`, D=`FLA O`, E=`WAL E`, F=`WAL O`. Autres onglets → `chiffresClesDisponibles: false` (pilotage masqué).
-5. Résultat → `ReportingBundle` via `setReportingBundle` — cache navigateur jusqu’à reset. Sélection = `selectedAgenceId` (défaut = **premier onglet** de `agencies[]`).
-6. **Alertes reporting** = toutes les agences (`buildReportingBundleAlerts`) ; le tiroir les regroupe par agence (`AlertsCenter`).
+5. Résultat → `ReportingBundle` (`ReportingAgency[]` multi-mois) via `setReportingBundle` — cache navigateur jusqu’à reset. Sélection = `selectedAgenceId` + `selectedMonthId` ; vue écran = `resolveReportingView` → `ReportingData` plat.
+6. **Alertes reporting** = toutes les agences sur la **période affichée** (`buildReportingBundleAlerts(bundle, monthId)`) ; le tiroir les regroupe par agence (`AlertsCenter`).
+
+## Mois & consolidé (2026-08-12)
+
+- UI : `MoisTabs` sous `AgenceTabs` — mois dispo + onglet **Consolidé**.
+- Consolidé : Σ montants ; `margeBrute` = Σ bénéfice ÷ Σ CA ; `tauxCles` = moyenne des mois ; N-1 / Pilotage CK inchangés.
+- Helpers : `src/lib/reporting/month-view.ts`.
+- Cache clé `murprotec-dashboard-cache-v2` (+ `selectedMonthId`).
 
 ## Mapping réel (CDC ✅ — structure CR commune)
 
@@ -56,12 +63,12 @@ Plages type « 15-18% » → `seuilMin`/`seuilMax` (warning dans la bande, dange
 
 ### Assemblage `/reporting` (ordre d’écran)
 
-1. En-tête : `agenceLibelle` + badge période ; actions **Brief & alertes** (`InsightsDrawer`) / PDF / reset.
-2. Barre `AgenceTabs`.
+1. En-tête : `agenceLibelle` + badge période (mois ou consolidé) ; actions **Brief & alertes** (`InsightsDrawer`) / PDF / reset.
+2. Barre `AgenceTabs` puis `MoisTabs` (période).
 3. Bénéfice + Variation (flags N-1).
 4. Taux clés → répartition CA → charges / break-even.
-5. 🔶 Pilotage commercial (si CK) en bas.
-6. Export PDF : dialogue agence / tous → `ReportingPrintSheet` + `window.print()` ; titre `Reporting-{onglet}` ou `Reporting-Financier`.
+5. 🔶 Pilotage commercial (si CK) en bas — **indépendant** du mois sélectionné.
+6. Export PDF : dialogue agence / tous → `ReportingPrintSheet` + `window.print()` sur la **période active** ; titre `Reporting-{onglet}` ou `Reporting-Financier`.
 7. Header app : **Vision produit** (`PostPocInfoButton`) — catalogue post-POC (hors flux dashboard).
 
 Métadonnées : WAL O = « Wallonie Ouest — Frameries » ; autres = CK row4 ou nom d’onglet.
@@ -98,13 +105,13 @@ Fourchette : `< min` → ok ; `min–max` → warning ; `> max` → danger. Seui
 1. UI : `FileUpload` → `parseReportingFile` (navigateur, `ArrayBuffer` + SheetJS).
 2. Client : tous onglets CR (hors CK / Synthèse) → `ReportingBundle.agencies[]` ; CK C–F si mapping A3.
 3. Seuils col A → flags ; seul calcul = nb mois cahier.
-4. `setReportingBundle` + `selectedAgenceId` (session / localStorage).
+4. `setReportingBundle` + `selectedAgenceId` / `selectedMonthId` (session / localStorage).
 
 ## Structure
 
-Types : `ReportingBundle`, `ReportingData`, `ChiffresClesData`, `SeuilIndicateur`.
-Parser : `src/lib/excel/parse-reporting.ts` · entrée fichier : `parseReportingFile` (`parse-file.ts`).
-UI : `src/components/reporting/*` (`AgenceTabs`, charts, cartes).
+Types : `ReportingBundle`, `ReportingAgency`, `ReportingMonthSlice`, `ReportingData` (vue plate), `ChiffresClesData`, `SeuilIndicateur`.
+Parser : `src/lib/excel/parse-reporting.ts` · vue : `src/lib/reporting/month-view.ts` · entrée fichier : `parseReportingFile` (`parse-file.ts`).
+UI : `src/components/reporting/*` (`AgenceTabs`, `MoisTabs`, charts, cartes).
 
 ## What not to do
 
@@ -122,9 +129,10 @@ UI : `src/components/reporting/*` (`AgenceTabs`, charts, cartes).
 - [x] Multi-onglets CR (hors CK / Synthèse) + soft-skip hors modèle
 - [x] CK C–F pour FLW/FLO/WAE/WAO ; pilotage conditionnel
 - [x] `AgenceTabs` + défaut premier onglet (ordre Excel)
-- [x] Alertes multi-agences regroupées dans le tiroir
-- [x] Mois vides ignorés
-- [x] Un seul calcul autorisé : nb mois cahier de commande
+- [x] `MoisTabs` + défaut dernier mois rempli + vue consolidée
+- [x] Alertes multi-agences regroupées dans le tiroir (période active)
+- [x] Mois vides ignorés (B→M)
+- [x] Un seul calcul AT : nb mois cahier de commande ; consolidé = Σ / marge recalculée / moyenne taux
 - [x] AT1–AT5 + 🔶 pilotage (si CK)
 - [x] État session only ; empty = `ReportingEmptyPreview`
-- [x] Export PDF A4 paysage (choix agence / tous les onglets, 1 page / onglet, nom fichier)
+- [x] Export PDF A4 paysage (choix agence / tous les onglets, 1 page / onglet, nom fichier, période active)

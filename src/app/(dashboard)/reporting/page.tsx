@@ -7,6 +7,7 @@ import { ResetUploadButton } from "@/components/ResetUploadButton";
 import { AgenceTabs } from "@/components/reporting/AgenceTabs";
 import { BeneficeBrutCard } from "@/components/reporting/BeneficeBrutCard";
 import { ChargesRentabiliteBlock } from "@/components/reporting/ChargesRentabiliteBlock";
+import { MoisTabs } from "@/components/reporting/MoisTabs";
 import { PilotageCommercialBlock } from "@/components/reporting/PilotageCommercialBlock";
 import { RepartitionCaChart } from "@/components/reporting/RepartitionCaChart";
 import { ReportingEmptyPreview } from "@/components/reporting/ReportingEmptyPreview";
@@ -22,10 +23,20 @@ import { parseReportingFile } from "@/lib/excel";
 import { buildReportingBundleAlerts } from "@/lib/poc/alerts";
 import { buildReportingBrief } from "@/lib/poc/brief";
 import { reportingPdfDocumentTitle } from "@/lib/pdf-filename";
-import type { ReportingBundle, ReportingData } from "@/types/dashboard";
+import {
+  resolveBundleViews,
+  resolveReportingView,
+} from "@/lib/reporting/month-view";
+import { CONSOLIDE_MONTH_ID, type ReportingBundle, type ReportingData } from "@/types/dashboard";
 
 function periodeBadgeLabel(data: ReportingData): string {
   const mois = data.periodeMois.trim().toLowerCase();
+  if (data.monthId === CONSOLIDE_MONTH_ID) {
+    if (data.periodeAnnee !== null) {
+      return `données consolidées ${data.periodeAnnee}`;
+    }
+    return `données consolidées`;
+  }
   if (data.periodeAnnee !== null) {
     return `données ${mois} ${data.periodeAnnee}`;
   }
@@ -37,15 +48,25 @@ export default function ReportingPage() {
     isCacheReady,
     reportingBundle,
     selectedAgenceId,
+    selectedMonthId,
     selectedReportingData,
     setReportingBundle,
     setSelectedAgenceId,
+    setSelectedMonthId,
   } = useDashboardData();
 
   const data = selectedReportingData;
   const [printSelection, setPrintSelection] =
     useState<ReportingExportSelection | null>(null);
   const [shouldPrint, setShouldPrint] = useState(false);
+
+  const selectedAgency = useMemo(() => {
+    if (!reportingBundle || !selectedAgenceId) return null;
+    return (
+      reportingBundle.agencies.find((a) => a.agenceId === selectedAgenceId) ??
+      null
+    );
+  }, [reportingBundle, selectedAgenceId]);
 
   const brief = useMemo(
     () => (data ? buildReportingBrief(data) : null),
@@ -54,21 +75,21 @@ export default function ReportingPage() {
   const alerts = useMemo(
     () =>
       reportingBundle
-        ? buildReportingBundleAlerts(reportingBundle)
+        ? buildReportingBundleAlerts(reportingBundle, selectedMonthId)
         : [],
-    [reportingBundle],
+    [reportingBundle, selectedMonthId],
   );
 
   const printDatasets = useMemo(() => {
     if (!reportingBundle) return [];
     if (printSelection === "all") {
-      return reportingBundle.agencies;
+      return resolveBundleViews(reportingBundle.agencies, selectedMonthId);
     }
     const id = printSelection ?? selectedAgenceId;
     if (!id) return [];
-    const one = reportingBundle.agencies.find((a) => a.agenceId === id);
-    return one ? [one] : [];
-  }, [reportingBundle, printSelection, selectedAgenceId]);
+    const agency = reportingBundle.agencies.find((a) => a.agenceId === id);
+    return agency ? [resolveReportingView(agency, selectedMonthId)] : [];
+  }, [reportingBundle, printSelection, selectedAgenceId, selectedMonthId]);
 
   useEffect(() => {
     if (!shouldPrint || printDatasets.length === 0) return;
@@ -160,21 +181,35 @@ export default function ReportingPage() {
         />
       </div>
 
-      {reportingBundle === null || data === null || selectedAgenceId === null ? (
+      {reportingBundle === null ||
+      data === null ||
+      selectedAgenceId === null ||
+      selectedMonthId === null ||
+      selectedAgency === null ? (
         <div className="print:hidden">
           <ReportingEmptyPreview />
         </div>
       ) : (
         <>
           <div className="space-y-8 print:hidden">
-            <AgenceTabs
-              agencies={reportingBundle.agencies.map((a) => ({
-                id: a.agenceId,
-                label: a.agenceCible,
-              }))}
-              selectedId={selectedAgenceId}
-              onSelect={setSelectedAgenceId}
-            />
+            <div className="space-y-3">
+              <AgenceTabs
+                agencies={reportingBundle.agencies.map((a) => ({
+                  id: a.agenceId,
+                  label: a.agenceCible,
+                }))}
+                selectedId={selectedAgenceId}
+                onSelect={setSelectedAgenceId}
+              />
+              <MoisTabs
+                months={selectedAgency.months.map((m) => ({
+                  id: m.id,
+                  label: m.label,
+                }))}
+                selectedId={selectedMonthId}
+                onSelect={setSelectedMonthId}
+              />
+            </div>
 
             <div className="grid gap-5 md:grid-cols-2">
               <BeneficeBrutCard

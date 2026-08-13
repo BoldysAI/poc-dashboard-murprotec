@@ -3,7 +3,13 @@
  * Aucun mapping Excel inventé.
  */
 
-import type { ReportingBundle, ReportingData, TresorerieData } from "@/types/dashboard";
+import type {
+  ReportingBundle,
+  ReportingData,
+  ReportingMonthId,
+  TresorerieData,
+} from "@/types/dashboard";
+import { resolveReportingView } from "@/lib/reporting/month-view";
 import { formatEur, formatEurSigned, formatMois, formatPct } from "./format";
 
 export type AlertSeverity = "danger" | "warning" | "info";
@@ -123,9 +129,12 @@ export function buildReportingAlerts(data: ReportingData): PocAlert[] {
 }
 
 /** Toutes les agences du bundle — centre d’alertes reporting + brief / assistant. */
-export function buildReportingBundleAlerts(bundle: ReportingBundle): PocAlert[] {
+export function buildReportingBundleAlerts(
+  bundle: ReportingBundle,
+  monthId: ReportingMonthId | null = null,
+): PocAlert[] {
   return bundle.agencies.flatMap((a) =>
-    sortAlerts(reportingAlertsForAgency(a)),
+    sortAlerts(reportingAlertsForAgency(resolveReportingView(a, monthId))),
   );
 }
 

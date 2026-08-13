@@ -15,6 +15,7 @@ type AssistantRequestBody = {
   tresorerie?: unknown;
   reporting?: unknown;
   selectedAgenceId?: unknown;
+  selectedMonthId?: unknown;
 };
 
 type OpenAiChatResponse = {
@@ -39,8 +40,10 @@ function parseContext(body: AssistantRequestBody): AssistantContext {
       : (body.reporting as ReportingBundle);
   const selectedAgenceId =
     typeof body.selectedAgenceId === "string" ? body.selectedAgenceId : null;
+  const selectedMonthId =
+    typeof body.selectedMonthId === "string" ? body.selectedMonthId : null;
 
-  return { tresorerie, reporting, selectedAgenceId };
+  return { tresorerie, reporting, selectedAgenceId, selectedMonthId };
 }
 
 function parseHistory(raw: unknown): AssistantMessage[] {
