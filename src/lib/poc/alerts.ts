@@ -33,12 +33,12 @@ function reportingAlertsForAgency(data: ReportingData): PocAlert[] {
     agenceLabel: data.agenceCible,
   };
 
-  if (data.variationVsN1 < 0) {
+  if (data.variationBeneficeNetVsN1 < 0) {
     alerts.push({
       id: `var-${data.agenceId}`,
       severity: "danger",
       title: "Variation vs N-1",
-      detail: `Profit après impôts en baisse de ${formatEurSigned(data.variationVsN1)} par rapport à N-1.`,
+      detail: `Profit après impôts en baisse de ${formatEurSigned(data.variationBeneficeNetVsN1)} par rapport à N-1.`,
       scope: "reporting",
       ...agenceMeta,
     });
@@ -72,12 +72,12 @@ function reportingAlertsForAgency(data: ReportingData): PocAlert[] {
         ...agenceMeta,
       });
     }
-    if (data.euroCoupon.valeur > data.euroCoupon.seuil) {
+    if (data.euroCoupon.valeur < data.euroCoupon.seuil) {
       alerts.push({
         id: `euro-${data.agenceId}`,
         severity: "danger",
         title: "Euro / coupon",
-        detail: `Valeur ${formatEur(data.euroCoupon.valeur)} au-dessus du seuil ${formatEur(data.euroCoupon.seuil)}.`,
+        detail: `Valeur ${formatEur(data.euroCoupon.valeur)} en dessous du seuil ${formatEur(data.euroCoupon.seuil)}.`,
         scope: "reporting",
         ...agenceMeta,
       });

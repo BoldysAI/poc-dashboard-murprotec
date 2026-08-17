@@ -125,7 +125,7 @@ poc-dashboard-murprotec/
    - lit le fichier en ArrayBuffer (RAM navigateur)
    - appelle parseTresorerie | parseReporting (SheetJS type: "array")
 3. Résultat → setTresorerieData | setReportingBundle (Context)
-4. Persistance navigateur (clé murprotec-dashboard-cache-v2)
+4. Persistance navigateur (clé murprotec-dashboard-cache-v3)
 5. UI : KPI / charts ; empty preview si null
 ```
 

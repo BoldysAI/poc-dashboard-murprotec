@@ -49,9 +49,14 @@ function CheckIcon({ className }: { className?: string }) {
   );
 }
 
-/** Seuil simple : ≤ ok ; > danger (même règle que les taux clés). */
-function seuilStatut(valeur: number, seuil: number): SeuilStatut {
+/** Impayés : rester sous le seuil = bon. */
+function seuilStatutPlafond(valeur: number, seuil: number): SeuilStatut {
   return valeur <= seuil ? "ok" : "danger";
+}
+
+/** Euro/coupon : dépasser le seuil = bon. */
+function seuilStatutPlancher(valeur: number, seuil: number): SeuilStatut {
+  return valeur >= seuil ? "ok" : "danger";
 }
 
 function statutStyles(statut: SeuilStatut): {
@@ -78,8 +83,8 @@ export function PilotageCommercialBlock({
   impayes,
   euroCoupon,
 }: PilotageCommercialBlockProps) {
-  const statutImpayes = seuilStatut(impayes.nbMois, impayes.seuil);
-  const statutEuro = seuilStatut(euroCoupon.valeur, euroCoupon.seuil);
+  const statutImpayes = seuilStatutPlafond(impayes.nbMois, impayes.seuil);
+  const statutEuro = seuilStatutPlancher(euroCoupon.valeur, euroCoupon.seuil);
   const stylesImpayes = statutStyles(statutImpayes);
   const stylesEuro = statutStyles(statutEuro);
 
@@ -155,7 +160,7 @@ export function PilotageCommercialBlock({
 
         <article
           className={`flex h-full flex-col rounded-lg border p-4 sm:p-5 ${stylesEuro.shell}`}
-          aria-label={`Euro par coupon : ${formatEur(euroCoupon.valeur)}, ${statutEuro === "ok" ? "dans le seuil" : "au-dessus du seuil"}`}
+          aria-label={`Euro par coupon : ${formatEur(euroCoupon.valeur)}, ${statutEuro === "ok" ? "au-dessus ou égal au seuil" : "en dessous du seuil"}`}
         >
           <header className="flex items-start justify-between gap-2">
             <div>

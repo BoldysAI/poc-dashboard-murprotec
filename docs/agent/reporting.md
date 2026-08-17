@@ -17,8 +17,9 @@
 
 - UI : `MoisTabs` sous `AgenceTabs` — mois dispo + onglet **Consolidé**.
 - Consolidé : Σ montants ; `margeBrute` = Σ bénéfice ÷ Σ CA ; `tauxCles` = moyenne des mois ; N-1 / Pilotage CK inchangés.
+- Tuiles bénéfice : **Brut / Net = toujours Σ consolidée** ; **Brut / Net du mois** = mois sélectionné, **masquées en vue Consolidé**.
 - Helpers : `src/lib/reporting/month-view.ts`.
-- Cache clé `murprotec-dashboard-cache-v2` (+ `selectedMonthId`).
+- Cache clé `murprotec-dashboard-cache-v3` (+ `selectedMonthId`).
 
 ## Mapping réel (CDC ✅ — structure CR commune)
 
@@ -28,10 +29,10 @@
 | TOTAL CA | 14 |
 | Bénéfice brut / marge | 35 / 36 ; N-1 en col O |
 | Taux clés | 38–43 (pré-calculés) |
-| Charges | Technique 53, Vente 62, Administration 78, **Financier 83** |
+| Charges | Technique **53 + 30 + 31** (Déplacement / Salaire Surveyor), Vente 62, Administration 78, **Financier 83** |
 | Profit après impôts | **95** (mois courant col B) |
 | Frais fixes / marge nette / break-even | 97 / 98 / 99 |
-| Variation vs N-1 | **P95** (profit après impôts — pas P35) |
+| Variation vs N-1 | **P35** (bénéfice brut) **et** **P95** (profit après impôts) |
 
 ### Mapping Chiffres Clés (cols C–F)
 
@@ -53,10 +54,10 @@ Plages type « 15-18% » → `seuilMin`/`seuilMax` (warning dans la bande, dange
 ## Pattern — indicateurs UI
 
 1. AT1 répartition CA : `RepartitionCaChart` (donut Recharts).
-2. AT2 bénéfice brut & marge vs N-1 : `BeneficeBrutCard` (delta abs/rel, flèche success/danger).
+2. AT2 bénéfice brut & net : `BeneficeBrutCard` / `BeneficeNetCard` — consolidé toujours ; tuiles « du mois » hors vue Consolidé. Sans encart delta N-1.
 3. AT3 taux clés : `TauxClesTiles` — 6 tuiles, statuts ok/warning/danger/neutral.
 4. AT4 charges + rentabilité : `ChargesRentabiliteBlock` — une carte (structure + frais fixes + break-even).
-5. AT5 variation globale vs N-1 : `VariationGlobaleCard` — valeur = **P95** ; contexte B95.
+5. AT5 variations vs N-1 : `VariationGlobaleBrutCard` (P35) + `VariationGlobaleNetCard` (P95).
 6. 🔶 Post-AT pilotage commercial : `PilotageCommercialBlock` — **si** `chiffresClesDisponibles`.
 7. Libellés catégories = col **A** L7–12 ; total donut = `caTotal` L14.
 8. Catégories à 0 : légende grisée. Tri donut décroissant.
@@ -65,7 +66,7 @@ Plages type « 15-18% » → `seuilMin`/`seuilMax` (warning dans la bande, dange
 
 1. En-tête : `agenceLibelle` + badge période (mois ou consolidé) ; actions **Brief & alertes** (`InsightsDrawer`) / PDF / reset.
 2. Barre `AgenceTabs` puis `MoisTabs` (période).
-3. Bénéfice + Variation (flags N-1).
+3. Bénéfice brut / net (consolidé toujours) + du mois (hors vue Consolidé) + variations P35 / P95.
 4. Taux clés → répartition CA → charges / break-even.
 5. 🔶 Pilotage commercial (si CK) en bas — **indépendant** du mois sélectionné.
 6. Export PDF : dialogue agence / tous → `ReportingPrintSheet` + `window.print()` sur la **période active** ; titre `Reporting-{onglet}` ou `Reporting-Financier`.
@@ -84,7 +85,7 @@ Métadonnées : WAL O = « Wallonie Ouest — Frameries » ; autres = CK row4 ou
 - Section cadrée distincte des indicateurs AT (frontière périmètre visible).
 - 3 cartes (`md:grid-cols-3`) : Cahier (neutre) ; Impayés & Euro/coupon (flags ok/danger).
 - Sous-titre UI : « Suivi commercial et trésorerie agence. » (sans jargon AT).
-- Flags seuil simple : `≤` ok, `>` danger ; seuils col A (`impayes.seuil`, `euroCoupon.seuil`) — jamais hardcodés.
+- Flags : Impayés `≤` ok, `>` danger ; **Euro/coupon inverse** (`≥` ok, `<` danger). Seuils col A (`impayes.seuil`, `euroCoupon.seuil`) — jamais hardcodés.
 - F45 lu ; seul calcul = nb mois cahier.
 
 ### AT3 — rapprochements taux ↔ seuils

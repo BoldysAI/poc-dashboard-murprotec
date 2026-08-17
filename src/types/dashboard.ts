@@ -182,7 +182,8 @@ export type ReportingAgency = {
   /** Année déduite du fileName si possible */
   periodeAnnee: number | null;
   beneficeBrutN1: number;
-  variationVsN1: number;
+  variationBeneficeBrutVsN1: number;
+  variationBeneficeNetVsN1: number;
   moisEcoules: number;
   cumulCA: number;
   seuils: SeuilIndicateur[];
@@ -212,21 +213,34 @@ export type ReportingData = {
   periodeAnnee: number | null;
   repartitionCA: RepartitionCA[];
   caTotal: number;
+  /** Bénéfice brut de la période active (mois ou Σ) — CA / charges / alertes. */
   beneficeBrut: number;
   margeBrute: number;
   beneficeBrutN1: number;
+  /** Σ bénéfice brut tous mois remplis — tuile « Bénéfice brut ». */
+  beneficeBrutConsolide: number;
+  /** Σ profit après impôts tous mois remplis — tuile « Bénéfice net ». */
+  beneficeNetConsolide: number;
+  /** Marge = Σ bénéfice brut / Σ CA. */
+  margeBruteConsolide: number;
+  /**
+   * Bénéfice brut du mois sélectionné ; `null` en vue consolidée.
+   */
+  beneficeBrutMois: number | null;
+  /** Profit après impôts du mois sélectionné ; `null` en vue consolidée. */
+  beneficeNetMois: number | null;
+  /** Marge brute du mois sélectionné ; `null` en vue consolidée. */
+  margeBruteMois: number | null;
   tauxCles: TauxCle[];
   structureCharges: StructureCharges;
   /** Ligne 95 — profit après impôts (mois ou Σ consolidé) */
   profitApresImpots: number;
   fraisFixes: number;
   breakEven: number;
-  /**
-   * Variation vs N-1 = colonne P, ligne 95 (profit après impôts).
-   * Choix documenté : synthèse P95 plutôt que P35 (bénéfice brut).
-   * Inchangé quelle que soit la période sélectionnée.
-   */
-  variationVsN1: number;
+  /** Variation bénéfice brut vs N-1 = P35. Indépendant du mois. */
+  variationBeneficeBrutVsN1: number;
+  /** Variation bénéfice net vs N-1 = P95. Indépendant du mois. */
+  variationBeneficeNetVsN1: number;
   /** Chiffres Clés B4 — mois écoulés (0 si CK indisponible) */
   moisEcoules: number;
   /** Chiffres Clés col agence L6 — cumul CA (0 si CK indisponible) */

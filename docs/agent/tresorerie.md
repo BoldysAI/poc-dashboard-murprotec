@@ -87,6 +87,7 @@ Composant : `RepartitionPaysChart` (donut Recharts, calqué sur le CA reporting 
 Composant section : `CompositionDepensesBlock` (`border-2 h-full`, pair du donut pays).
 
 - Barre empilée + liste postes avec barres proportionnelles (remplit la hauteur stretch).
+- Ordre d’affichage (légende **et** segments empilés, écran + PDF) : **montant décroissant** — pas l’ordre fixe Salaires → Transferts.
 - % vs total dépenses ; signal d’écart en langage métier si `|somme − total| > 1` EUR.
 - Copy écran (financier uniquement) — pas de cellules Excel / « hors AT ».
 

@@ -122,7 +122,7 @@ export function TresoreriePrintSheet({
       const pct =
         data.totalDepenses === 0 ? 0 : montant / data.totalDepenses;
       return { ...s, montant, pct };
-    });
+    }).sort((a, b) => b.montant - a.montant);
   }, [data.compositionDepenses, data.totalDepenses]);
 
   const societesActives = useMemo(

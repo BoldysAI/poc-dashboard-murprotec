@@ -6,6 +6,7 @@ import { InsightsDrawer } from "@/components/poc/InsightsDrawer";
 import { ResetUploadButton } from "@/components/ResetUploadButton";
 import { AgenceTabs } from "@/components/reporting/AgenceTabs";
 import { BeneficeBrutCard } from "@/components/reporting/BeneficeBrutCard";
+import { BeneficeNetCard } from "@/components/reporting/BeneficeNetCard";
 import { ChargesRentabiliteBlock } from "@/components/reporting/ChargesRentabiliteBlock";
 import { MoisTabs } from "@/components/reporting/MoisTabs";
 import { PilotageCommercialBlock } from "@/components/reporting/PilotageCommercialBlock";
@@ -17,7 +18,10 @@ import {
 } from "@/components/reporting/ReportingExportPdfButton";
 import { ReportingPrintSheet } from "@/components/reporting/ReportingPrintSheet";
 import { TauxClesTiles } from "@/components/reporting/TauxClesTiles";
-import { VariationGlobaleCard } from "@/components/reporting/VariationGlobaleCard";
+import {
+  VariationGlobaleBrutCard,
+  VariationGlobaleNetCard,
+} from "@/components/reporting/VariationGlobaleCard";
 import { useDashboardData } from "@/contexts/dashboard-data-context";
 import { parseReportingFile } from "@/lib/excel";
 import { buildReportingBundleAlerts } from "@/lib/poc/alerts";
@@ -211,16 +215,48 @@ export default function ReportingPage() {
               />
             </div>
 
-            <div className="grid gap-5 md:grid-cols-2">
-              <BeneficeBrutCard
-                beneficeBrut={data.beneficeBrut}
-                margeBrute={data.margeBrute}
-                beneficeBrutN1={data.beneficeBrutN1}
-              />
-              <VariationGlobaleCard
-                variationVsN1={data.variationVsN1}
-                profitApresImpots={data.profitApresImpots}
-              />
+            <div className="space-y-5">
+              <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+                <BeneficeBrutCard
+                  title="Bénéfice brut"
+                  subtitle="Résultat avant charges de structure, cumul de la période."
+                  beneficeBrut={data.beneficeBrutConsolide}
+                  margeBrute={data.margeBruteConsolide}
+                />
+                <BeneficeNetCard
+                  title="Bénéfice net"
+                  subtitle="Profit après impôts, cumul de la période."
+                  beneficeNet={data.beneficeNetConsolide}
+                />
+                {data.monthId !== CONSOLIDE_MONTH_ID &&
+                data.beneficeBrutMois !== null &&
+                data.beneficeNetMois !== null &&
+                data.margeBruteMois !== null ? (
+                  <>
+                    <BeneficeBrutCard
+                      title="Bénéfice brut du mois"
+                      subtitle={`Résultat avant charges de structure (${data.periodeMois}).`}
+                      beneficeBrut={data.beneficeBrutMois}
+                      margeBrute={data.margeBruteMois}
+                    />
+                    <BeneficeNetCard
+                      title="Bénéfice net du mois"
+                      subtitle={`Profit après impôts (${data.periodeMois}).`}
+                      beneficeNet={data.beneficeNetMois}
+                    />
+                  </>
+                ) : null}
+              </div>
+              <div className="grid gap-5 md:grid-cols-2">
+                <VariationGlobaleBrutCard
+                  variationVsN1={data.variationBeneficeBrutVsN1}
+                  beneficeBrutConsolide={data.beneficeBrutConsolide}
+                />
+                <VariationGlobaleNetCard
+                  variationVsN1={data.variationBeneficeNetVsN1}
+                  beneficeNetConsolide={data.beneficeNetConsolide}
+                />
+              </div>
             </div>
 
             <TauxClesTiles tauxCles={data.tauxCles} />

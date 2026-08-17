@@ -117,12 +117,12 @@ export function buildReportingBrief(data: ReportingData): MonthBrief {
   bullets.push({
     id: "var",
     tone:
-      data.variationVsN1 > 0
+      data.variationBeneficeNetVsN1 > 0
         ? "success"
-        : data.variationVsN1 < 0
+        : data.variationBeneficeNetVsN1 < 0
           ? "danger"
           : "neutral",
-    text: `Variation profit après impôts vs N-1 : ${formatEurSigned(data.variationVsN1)}.`,
+    text: `Variation profit après impôts vs N-1 : ${formatEurSigned(data.variationBeneficeNetVsN1)}.`,
   });
 
   const enAlerte = data.tauxCles.filter(
@@ -152,7 +152,7 @@ export function buildReportingBrief(data: ReportingData): MonthBrief {
 
   const conseil = conseilFromAlerts(
     alerts,
-    deltaBenef >= 0 && data.variationVsN1 >= 0
+    deltaBenef >= 0 && data.variationBeneficeNetVsN1 >= 0
       ? "Agence en bonne trajectoire vs N-1 — garder le focus sur la rentabilité mensuelle."
       : "Analyser les postes de charges et les taux en écart avant le prochain COMEX.",
   );

@@ -296,3 +296,13 @@ Retour client : fichier jusqu’à juillet → seul janvier affiché (parse fig�
 - Cache `murprotec-dashboard-cache-v2` + `selectedMonthId` ; vue plate via `resolveReportingView`.
 - Spec : `docs/superpowers/specs/2026-08-12-reporting-mois-consolide-design.md`.
 - Source : appel client + instruction session Yassine.
+
+## 2026-08-13 · [P] · Adaptations recette Reporting / Trésorerie
+
+Spec : `docs/spec/Spec-Adaptations-Reporting-Tresorerie-2026-08-13.md` + clarifications session Yassine.
+
+- **T4** : composition des dépenses triée par montant décroissant (légende + barre, écran + PDF).
+- **R4** : charges Technique = L53 + L30 + L31 (Déplacement / Salaire Surveyor).
+- **R5** : Euro/coupon = plancher (`≥` ok) ; Impayés restent plafond. Alerte danger si valeur < seuil.
+- **R1–R3** : tuiles Bénéfice brut / net = **toujours Σ consolidée** ; tuiles « du mois » = mois sélectionné, **masquées en vue Consolidé**. Variations **P35** (brut) et **P95** (net). `variationVsN1` renommé `variationBeneficeNetVsN1`. Cache `murprotec-dashboard-cache-v3`.
+- **R6** (Luxembourg col J / Hollande col H) : **différé** — codes A3 / noms d’onglets CR inconnus sans le fichier consolidé Thomas. Pas d’invention de mapping.

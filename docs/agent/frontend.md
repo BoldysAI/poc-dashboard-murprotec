@@ -41,7 +41,7 @@ const { reportingBundle, setReportingBundle, selectedReportingData } =
 - **Pas d’attribut `accept`** sur l’input : le sélecteur ne filtre pas par extension ; la validation format/structure est **dans `parseFile`** (message d’erreur affiché).
 - Erreurs : `ParseError.message` affiché à l’utilisateur — jamais de stack.
 - Parsing Excel **100 % navigateur** (`parseTresorerieFile` / `parseReportingFile`) — pas d’upload serveur (évite le transfert des .xlsx lourds type Power Pivot ~48 Mo).
-- Refresh navigateur = **conserve** le cache (`localStorage`, clé `murprotec-dashboard-cache-v2`) jusqu’à reset explicite.
+- Refresh navigateur = **conserve** le cache (`localStorage`, clé `murprotec-dashboard-cache-v3`) jusqu’à reset explicite.
 - Wipe : boutons réinitialiser / `clearAll` → `clearDashboardCache()`.
 
 ## Charts & KPI briques

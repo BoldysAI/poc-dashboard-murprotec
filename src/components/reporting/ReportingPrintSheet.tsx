@@ -2,15 +2,12 @@
 
 import { useMemo } from "react";
 import { Cell, Pie, PieChart } from "recharts";
-import type { ReportingData } from "@/types/dashboard";
+import { CONSOLIDE_MONTH_ID, type ReportingData } from "@/types/dashboard";
 import {
-  deltaAbsolu,
-  deltaRelatif,
   formatEur,
   formatEurSigned,
   formatMois,
   formatPct,
-  formatPctSigned,
   trendTone,
 } from "./format-reporting";
 import { ReportingPrintBanner } from "./ReportingPrintBanner";
@@ -43,10 +40,9 @@ function periodeLabel(data: ReportingData): string {
 }
 
 function ReportingPrintPage({ data }: { data: ReportingData }) {
-  const delta = deltaAbsolu(data.beneficeBrut, data.beneficeBrutN1);
-  const rel = deltaRelatif(data.beneficeBrut, data.beneficeBrutN1);
-  const toneBenef = trendTone(delta);
-  const toneVar = trendTone(data.variationVsN1);
+  const isConsolide = data.monthId === CONSOLIDE_MONTH_ID;
+  const toneVarBrut = trendTone(data.variationBeneficeBrutVsN1);
+  const toneVarNet = trendTone(data.variationBeneficeNetVsN1);
 
   const caSlices = useMemo(() => {
     // Couleurs = index d’origine fichier (comme RepartitionCaChart), puis tri décroissant
@@ -98,42 +94,72 @@ function ReportingPrintPage({ data }: { data: ReportingData }) {
           <article className="print-kpi">
             <p className="print-kpi-label">Bénéfice brut</p>
             <p className="print-kpi-hint">
-              Marge {formatPct(data.margeBrute, 2)}
+              Marge {formatPct(data.margeBruteConsolide, 2)}
             </p>
-            <p className="print-kpi-value">{formatEur(data.beneficeBrut)}</p>
-            <p
-              className="print-kpi-hint"
-              style={{
-                color:
-                  toneBenef === "success"
-                    ? "#1b7a4e"
-                    : toneBenef === "danger"
-                      ? "#b42318"
-                      : undefined,
-              }}
-            >
-              vs N-1 {formatEurSigned(delta)}
-              {rel !== null ? ` (${formatPctSigned(rel, 1)})` : ""}
+            <p className="print-kpi-value">
+              {formatEur(data.beneficeBrutConsolide)}
             </p>
           </article>
           <article className="print-kpi">
-            <p className="print-kpi-label">Variation globale vs N-1</p>
+            <p className="print-kpi-label">Bénéfice net</p>
             <p className="print-kpi-hint">Profit après impôts</p>
+            <p className="print-kpi-value">
+              {formatEur(data.beneficeNetConsolide)}
+            </p>
+          </article>
+          {!isConsolide &&
+          data.beneficeBrutMois !== null &&
+          data.beneficeNetMois !== null &&
+          data.margeBruteMois !== null ? (
+            <>
+              <article className="print-kpi">
+                <p className="print-kpi-label">Bénéfice brut du mois</p>
+                <p className="print-kpi-hint">
+                  Marge {formatPct(data.margeBruteMois, 2)}
+                </p>
+                <p className="print-kpi-value">
+                  {formatEur(data.beneficeBrutMois)}
+                </p>
+              </article>
+              <article className="print-kpi">
+                <p className="print-kpi-label">Bénéfice net du mois</p>
+                <p className="print-kpi-hint">{data.periodeMois}</p>
+                <p className="print-kpi-value">
+                  {formatEur(data.beneficeNetMois)}
+                </p>
+              </article>
+            </>
+          ) : null}
+          <article className="print-kpi">
+            <p className="print-kpi-label">Variation brut vs N-1</p>
             <p
               className="print-kpi-value"
               style={{
                 color:
-                  toneVar === "success"
+                  toneVarBrut === "success"
                     ? "#1b7a4e"
-                    : toneVar === "danger"
+                    : toneVarBrut === "danger"
                       ? "#b42318"
                       : undefined,
               }}
             >
-              {formatEurSigned(data.variationVsN1)}
+              {formatEurSigned(data.variationBeneficeBrutVsN1)}
             </p>
-            <p className="print-kpi-hint">
-              Mois : {formatEur(data.profitApresImpots)}
+          </article>
+          <article className="print-kpi">
+            <p className="print-kpi-label">Variation net vs N-1</p>
+            <p
+              className="print-kpi-value"
+              style={{
+                color:
+                  toneVarNet === "success"
+                    ? "#1b7a4e"
+                    : toneVarNet === "danger"
+                      ? "#b42318"
+                      : undefined,
+              }}
+            >
+              {formatEurSigned(data.variationBeneficeNetVsN1)}
             </p>
           </article>
           <article className="print-kpi">

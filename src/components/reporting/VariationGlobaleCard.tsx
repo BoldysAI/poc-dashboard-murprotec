@@ -9,23 +9,19 @@ import {
 } from "./format-reporting";
 
 type VariationGlobaleCardProps = {
-  /**
-   * Variation globale vs N-1 = **L95 colonne P** (profit après impôts).
-   * Choix documenté : ligne la plus synthétique du compte de résultat
-   * (pas P35 bénéfice brut).
-   */
+  title: string;
+  subtitle: string;
   variationVsN1: number;
-  /** L95 colonne B — contexte du mois courant */
-  profitApresImpots: number;
+  contextLabel: string;
+  contextValue: number;
 };
 
-/**
- * Indicateur AT n°5 — performance globale vs N-1.
- * Source fichier : variation = P95 ; contexte = B95.
- */
-export function VariationGlobaleCard({
+function VariationGlobaleCard({
+  title,
+  subtitle,
   variationVsN1,
-  profitApresImpots,
+  contextLabel,
+  contextValue,
 }: VariationGlobaleCardProps) {
   const tone = trendTone(variationVsN1);
   const label =
@@ -39,12 +35,9 @@ export function VariationGlobaleCard({
     <article className="flex flex-col gap-4 rounded-lg border-2 border-primary/15 bg-background p-5 sm:p-6">
       <header>
         <h2 className="text-lg font-semibold tracking-tight text-primary">
-          Variation globale vs N-1
+          {title}
         </h2>
-        <p className="mt-0.5 text-sm text-primary/65">
-          Écart du profit après impôts par rapport à la même période l&apos;an
-          dernier.
-        </p>
+        <p className="mt-0.5 text-sm text-primary/65">{subtitle}</p>
       </header>
 
       <div
@@ -61,12 +54,48 @@ export function VariationGlobaleCard({
 
       <div className="mt-auto rounded-md bg-surface/80 px-3 py-3 text-sm text-primary/70">
         <p>
-          Profit après impôts (mois){" "}
+          {contextLabel}{" "}
           <span className="font-medium tabular-nums text-primary">
-            {formatEur(profitApresImpots)}
+            {formatEur(contextValue)}
           </span>
         </p>
       </div>
     </article>
+  );
+}
+
+export function VariationGlobaleBrutCard({
+  variationVsN1,
+  beneficeBrutConsolide,
+}: {
+  variationVsN1: number;
+  beneficeBrutConsolide: number;
+}) {
+  return (
+    <VariationGlobaleCard
+      title="Variation bénéfice brut vs N-1"
+      subtitle="Écart du bénéfice brut par rapport à la même période l'an dernier."
+      variationVsN1={variationVsN1}
+      contextLabel="Bénéfice brut consolidé"
+      contextValue={beneficeBrutConsolide}
+    />
+  );
+}
+
+export function VariationGlobaleNetCard({
+  variationVsN1,
+  beneficeNetConsolide,
+}: {
+  variationVsN1: number;
+  beneficeNetConsolide: number;
+}) {
+  return (
+    <VariationGlobaleCard
+      title="Variation bénéfice net vs N-1"
+      subtitle="Écart du profit après impôts par rapport à la même période l'an dernier."
+      variationVsN1={variationVsN1}
+      contextLabel="Bénéfice net consolidé"
+      contextValue={beneficeNetConsolide}
+    />
   );
 }

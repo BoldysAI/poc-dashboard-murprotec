@@ -27,7 +27,12 @@ function compactAgence(a: ReportingData) {
     margeBrute: a.margeBrute,
     beneficeBrutN1: a.beneficeBrutN1,
     profitApresImpots: a.profitApresImpots,
-    variationVsN1: a.variationVsN1,
+    beneficeBrutConsolide: a.beneficeBrutConsolide,
+    beneficeNetConsolide: a.beneficeNetConsolide,
+    beneficeBrutMois: a.beneficeBrutMois,
+    beneficeNetMois: a.beneficeNetMois,
+    variationBeneficeBrutVsN1: a.variationBeneficeBrutVsN1,
+    variationBeneficeNetVsN1: a.variationBeneficeNetVsN1,
     fraisFixes: a.fraisFixes,
     breakEven: a.breakEven,
     structureCharges: a.structureCharges,
@@ -101,7 +106,8 @@ export function buildLlmContextPayload(ctx: AssistantContext): {
         caTotal: a.caTotal,
         margeBrute: a.margeBrute,
         profitApresImpots: a.profitApresImpots,
-        variationVsN1: a.variationVsN1,
+        variationBeneficeBrutVsN1: a.variationBeneficeBrutVsN1,
+        variationBeneficeNetVsN1: a.variationBeneficeNetVsN1,
         tauxEnEcart: a.tauxCles
           .filter((t) => t.statut === "warning" || t.statut === "danger")
           .map((t) => t.nom),

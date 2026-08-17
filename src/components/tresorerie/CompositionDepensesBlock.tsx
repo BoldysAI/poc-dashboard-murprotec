@@ -103,11 +103,15 @@ export function CompositionDepensesBlock({
     [composition],
   );
 
-  const legend = SEGMENTS.map((s) => {
-    const montant = composition[s.key];
-    const pct = totalDepenses === 0 ? 0 : montant / totalDepenses;
-    return { ...s, montant, pct };
-  });
+  const legend = useMemo(
+    () =>
+      SEGMENTS.map((s) => {
+        const montant = composition[s.key];
+        const pct = totalDepenses === 0 ? 0 : montant / totalDepenses;
+        return { ...s, montant, pct };
+      }).sort((a, b) => b.montant - a.montant),
+    [composition, totalDepenses],
+  );
 
   return (
     <section
@@ -156,7 +160,7 @@ export function CompositionDepensesBlock({
               cursor={{ fill: "transparent" }}
               wrapperStyle={{ outline: "none" }}
             />
-            {SEGMENTS.map((s, i) => (
+            {legend.map((s, i) => (
               <Bar
                 key={s.key}
                 dataKey={s.key}
@@ -168,7 +172,7 @@ export function CompositionDepensesBlock({
                 radius={
                   i === 0
                     ? [6, 0, 0, 6]
-                    : i === SEGMENTS.length - 1
+                    : i === legend.length - 1
                       ? [0, 6, 6, 0]
                       : [0, 0, 0, 0]
                 }

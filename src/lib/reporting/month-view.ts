@@ -154,7 +154,32 @@ export function buildTauxCles(
   });
 }
 
+function agencySlices(agency: ReportingAgency): ReportingMonthSlice[] {
+  return agency.months
+    .map((m) => agency.byMonth[m.id])
+    .filter((s): s is ReportingMonthSlice => s !== undefined);
+}
+
+function consolidéMontants(agency: ReportingAgency): {
+  beneficeBrut: number;
+  profitApresImpots: number;
+  margeBrute: number;
+} {
+  const slices = agencySlices(agency);
+  if (slices.length === 0) {
+    throw new Error(`Agence « ${agency.agenceId} » sans slice à consolider.`);
+  }
+  const caTotal = slices.reduce((s, x) => s + x.caTotal, 0);
+  const beneficeBrut = slices.reduce((s, x) => s + x.beneficeBrut, 0);
+  return {
+    beneficeBrut,
+    profitApresImpots: slices.reduce((s, x) => s + x.profitApresImpots, 0),
+    margeBrute: caTotal !== 0 ? beneficeBrut / caTotal : 0,
+  };
+}
+
 function sharedAgencyFields(agency: ReportingAgency) {
+  const consolide = consolidéMontants(agency);
   return {
     agenceId: agency.agenceId,
     agenceCible: agency.agenceCible,
@@ -162,7 +187,11 @@ function sharedAgencyFields(agency: ReportingAgency) {
     chiffresClesDisponibles: agency.chiffresClesDisponibles,
     periodeAnnee: agency.periodeAnnee,
     beneficeBrutN1: agency.beneficeBrutN1,
-    variationVsN1: agency.variationVsN1,
+    variationBeneficeBrutVsN1: agency.variationBeneficeBrutVsN1,
+    variationBeneficeNetVsN1: agency.variationBeneficeNetVsN1,
+    beneficeBrutConsolide: consolide.beneficeBrut,
+    beneficeNetConsolide: consolide.profitApresImpots,
+    margeBruteConsolide: consolide.margeBrute,
     moisEcoules: agency.moisEcoules,
     cumulCA: agency.cumulCA,
     seuils: agency.seuils,
@@ -186,6 +215,9 @@ function sliceToView(
     caTotal: slice.caTotal,
     beneficeBrut: slice.beneficeBrut,
     margeBrute: slice.margeBrute,
+    beneficeBrutMois: slice.beneficeBrut,
+    beneficeNetMois: slice.profitApresImpots,
+    margeBruteMois: slice.margeBrute,
     tauxCles: buildTauxCles(slice.tauxClesBase, agency.seuils),
     structureCharges: slice.structureCharges,
     profitApresImpots: slice.profitApresImpots,
@@ -195,9 +227,7 @@ function sliceToView(
 }
 
 function consolidateAgency(agency: ReportingAgency): ReportingData {
-  const slices = agency.months
-    .map((m) => agency.byMonth[m.id])
-    .filter((s): s is ReportingMonthSlice => s !== undefined);
+  const slices = agencySlices(agency);
 
   if (slices.length === 0) {
     throw new Error(`Agence « ${agency.agenceId} » sans slice à consolider.`);
@@ -249,6 +279,9 @@ function consolidateAgency(agency: ReportingAgency): ReportingData {
     profitApresImpots: slices.reduce((s, x) => s + x.profitApresImpots, 0),
     fraisFixes: slices.reduce((s, x) => s + x.fraisFixes, 0),
     breakEven: slices.reduce((s, x) => s + x.breakEven, 0),
+    beneficeBrutMois: null,
+    beneficeNetMois: null,
+    margeBruteMois: null,
   };
 }
 

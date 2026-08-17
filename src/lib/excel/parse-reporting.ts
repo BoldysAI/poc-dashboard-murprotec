@@ -238,7 +238,10 @@ function extractMonthSlice(
   });
 
   const structureCharges: StructureCharges = {
-    technique: requireNumber(sheet, `${col}53`, "Charges TECHNIQUE"),
+    technique:
+      requireNumber(sheet, `${col}53`, "Charges TECHNIQUE") +
+      requireNumber(sheet, `${col}30`, "Déplacement Surveyor") +
+      requireNumber(sheet, `${col}31`, "Salaire Surveyor"),
     vente: requireNumber(sheet, `${col}62`, "Charges VENTE"),
     administration: requireNumber(sheet, `${col}78`, "Charges ADMINISTRATION"),
     financier: requireNumber(sheet, `${col}83`, "Charges FINANCIER"),
@@ -268,11 +271,17 @@ function extractMonthSlice(
 
 function extractN1(sheet: WorkSheet): {
   beneficeBrutN1: number;
-  variationVsN1: number;
+  variationBeneficeBrutVsN1: number;
+  variationBeneficeNetVsN1: number;
 } {
   return {
     beneficeBrutN1: requireNumber(sheet, "O35", "Bénéfice brut N-1"),
-    variationVsN1: requireNumber(
+    variationBeneficeBrutVsN1: requireNumber(
+      sheet,
+      "P35",
+      "Variation bénéfice brut vs N-1",
+    ),
+    variationBeneficeNetVsN1: requireNumber(
       sheet,
       "P95",
       "Variation vs N-1 (profit après impôts)",
@@ -375,7 +384,11 @@ export function parseReporting(
     const { months, byMonth } = extractAvailableMonths(sheet);
     if (months.length === 0) continue;
 
-    let n1: { beneficeBrutN1: number; variationVsN1: number };
+    let n1: {
+      beneficeBrutN1: number;
+      variationBeneficeBrutVsN1: number;
+      variationBeneficeNetVsN1: number;
+    };
     try {
       n1 = extractN1(sheet);
     } catch {
@@ -422,7 +435,8 @@ export function parseReporting(
       byMonth,
       periodeAnnee,
       beneficeBrutN1: n1.beneficeBrutN1,
-      variationVsN1: n1.variationVsN1,
+      variationBeneficeBrutVsN1: n1.variationBeneficeBrutVsN1,
+      variationBeneficeNetVsN1: n1.variationBeneficeNetVsN1,
       ...ckFields,
       fileName,
     });
