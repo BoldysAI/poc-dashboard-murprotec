@@ -9,7 +9,7 @@
 1. **Multi-agences** : tous les onglets CR du `.xlsx` **sauf** `Chiffres Clés` et `Synthèse` ; onglets UI via `AgenceTabs`. Soft-skip si structure hors CR (ex. Evolution).
 2. **Lire, ne pas recalculer** les ratios déjà dans le fichier — sauf **nb de mois cahier de commande** = Attente ÷ (Cumul CA / mois écoulés) (🔶) **et** la vue consolidée (§ Mois).
 3. **Mois** = colonnes **B→M** ; mois disponible = header L4 reconnu + L14 ≠ 0/vide. N-1 = colonnes O / P / Q (partagé, indépendant du mois). Défaut UI = **dernier mois rempli**.
-4. **Seuils** = onglet `Chiffres Clés` (col A libellés). Colonnes agence CK : C=`FLA W`, D=`FLA O`, E=`WAL E`, F=`WAL O`. Autres onglets → `chiffresClesDisponibles: false` (pilotage masqué).
+4. **Seuils** = onglet `Chiffres Clés` (col A libellés). Colonnes agence CK : C=`FLA W`, D=`FLA O`, E=`WAL E`, F=`WAL O`, G=`Luxembourg`, H=`Hollande`. Autres onglets → `chiffresClesDisponibles: false` (pilotage masqué).
 5. Résultat → `ReportingBundle` (`ReportingAgency[]` multi-mois) via `setReportingBundle` — cache navigateur jusqu’à reset. Sélection = `selectedAgenceId` + `selectedMonthId` ; vue écran = `resolveReportingView` → `ReportingData` plat.
 6. **Alertes reporting** = toutes les agences sur la **période affichée** (`buildReportingBundleAlerts(bundle, monthId)`) ; le tiroir les regroupe par agence (`AlertsCenter`).
 
@@ -19,7 +19,7 @@
 - Consolidé : Σ montants ; `margeBrute` = Σ bénéfice ÷ Σ CA ; `tauxCles` = moyenne des mois ; N-1 / Pilotage CK inchangés.
 - Tuiles bénéfice : **Brut / Net = toujours Σ consolidée** ; **Brut / Net du mois** = mois sélectionné, **masquées en vue Consolidé**.
 - Helpers : `src/lib/reporting/month-view.ts`.
-- Cache clé `murprotec-dashboard-cache-v3` (+ `selectedMonthId`).
+- Cache clé `murprotec-dashboard-cache-v4` (+ `selectedMonthId`).
 
 ## Mapping réel (CDC ✅ — structure CR commune)
 
@@ -34,11 +34,11 @@
 | Frais fixes / marge nette / break-even | 97 / 98 / 99 |
 | Variation vs N-1 | **P35** (bénéfice brut) **et** **P95** (profit après impôts) |
 
-### Mapping Chiffres Clés (cols C–F)
+### Mapping Chiffres Clés (cols C–H)
 
 | Domaine | Cellules |
 |---|---|
-| Mois écoulés | **B4** (C4–F4 = libellés agences, pas un nombre) |
+| Mois écoulés | **B4** (C4–H4 = libellés agences, pas un nombre) |
 | Cumul CA / Cumul Ventes / Attente | `{col}6` / `{col}7` / `{col}8` |
 | Seuils | Col **A** (texte) + libellés col **B** — parsés, jamais hardcodés |
 | Euro/coupon | `{col}36` ; seuil depuis A |
@@ -104,7 +104,7 @@ Fourchette : `< min` → ok ; `min–max` → warning ; `> max` → danger. Seui
 ## Pattern — pipeline
 
 1. UI : `FileUpload` → `parseReportingFile` (navigateur, `ArrayBuffer` + SheetJS).
-2. Client : tous onglets CR (hors CK / Synthèse) → `ReportingBundle.agencies[]` ; CK C–F si mapping A3.
+2. Client : tous onglets CR (hors CK / Synthèse) → `ReportingBundle.agencies[]` ; CK C–H si mapping A3 / nom d’onglet.
 3. Seuils col A → flags ; seul calcul = nb mois cahier.
 4. `setReportingBundle` + `selectedAgenceId` / `selectedMonthId` (session / localStorage).
 
@@ -128,7 +128,7 @@ UI : `src/components/reporting/*` (`AgenceTabs`, `MoisTabs`, charts, cartes).
 ## Checklist
 
 - [x] Multi-onglets CR (hors CK / Synthèse) + soft-skip hors modèle
-- [x] CK C–F pour FLW/FLO/WAE/WAO ; pilotage conditionnel
+- [x] CK C–H pour FLW/FLO/WAE/WAO + Luxembourg (G) / Hollande (H) ; pilotage conditionnel
 - [x] `AgenceTabs` + défaut premier onglet (ordre Excel)
 - [x] `MoisTabs` + défaut dernier mois rempli + vue consolidée
 - [x] Alertes multi-agences regroupées dans le tiroir (période active)

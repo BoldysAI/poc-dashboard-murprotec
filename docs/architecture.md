@@ -125,7 +125,7 @@ poc-dashboard-murprotec/
    - lit le fichier en ArrayBuffer (RAM navigateur)
    - appelle parseTresorerie | parseReporting (SheetJS type: "array")
 3. Résultat → setTresorerieData | setReportingBundle (Context)
-4. Persistance navigateur (clé murprotec-dashboard-cache-v3)
+4. Persistance navigateur (clé murprotec-dashboard-cache-v4)
 5. UI : KPI / charts ; empty preview si null
 ```
 
@@ -180,7 +180,7 @@ Défini dans `src/types/dashboard.ts`. Les deux briques **ne partagent pas** de 
 
 - Bundle = `{ fileName, agencies[] }` — un `ReportingData` par onglet CR retenu  
 - Onglets exclus : `Chiffres Clés`, `Synthèse` ; soft-skip des structures hors modèle  
-- Par agence : répartition CA, bénéfice/marge, taux clés, structure de charges, break-even, variation N-1 (P95), pilotage commercial si Chiffres Clés disponible (cols C–F)  
+- Par agence : répartition CA, bénéfice/marge, taux clés, structure de charges, break-even, variation N-1 (P95), pilotage commercial si Chiffres Clés disponible (cols C–H)  
 - Sélection UI : `selectedAgenceId` (défaut = premier onglet) + `selectedMonthId` (défaut = dernier mois rempli) ; vue = `resolveReportingView`
 
 ---

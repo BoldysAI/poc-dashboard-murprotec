@@ -24,7 +24,7 @@ import {
 /** Colonnes mois CR : B (janvier) → M (décembre). */
 const MONTH_COLS = Array.from({ length: 12 }, (_, i) => colLetter(i + 1));
 
-/** Mapping A3 / nom d’onglet → colonne Chiffres Clés (C–F). */
+/** Mapping A3 / nom d’onglet → colonne Chiffres Clés (C–H). */
 const CK_REGISTRY: {
   codes: string[];
   sheetNames: string[];
@@ -57,6 +57,18 @@ const CK_REGISTRY: {
     col: "F",
     libelleFallback: "Wallonie Ouest",
     libelleOverride: "Wallonie Ouest — Frameries",
+  },
+  {
+    codes: [],
+    sheetNames: ["Luxembourg"],
+    col: "G",
+    libelleFallback: "Luxembourg",
+  },
+  {
+    codes: [],
+    sheetNames: ["Hollande"],
+    col: "H",
+    libelleFallback: "Hollande",
   },
 ];
 

@@ -203,7 +203,7 @@ export type ReportingData = {
   agenceCible: string;
   /** Libellé long en-tête (CK row4 ou nom d’onglet ; WAL O = Frameries) */
   agenceLibelle: string;
-  /** true si colonne Chiffres Clés (C–F) disponible pour le pilotage 🔶 */
+  /** true si colonne Chiffres Clés (C–H) disponible pour le pilotage 🔶 */
   chiffresClesDisponibles: boolean;
   /** En-tête mois / libellé consolidé */
   periodeMois: string;

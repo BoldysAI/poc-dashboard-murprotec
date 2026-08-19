@@ -306,3 +306,13 @@ Spec : `docs/spec/Spec-Adaptations-Reporting-Tresorerie-2026-08-13.md` + clarifi
 - **R5** : Euro/coupon = plancher (`≥` ok) ; Impayés restent plafond. Alerte danger si valeur < seuil.
 - **R1–R3** : tuiles Bénéfice brut / net = **toujours Σ consolidée** ; tuiles « du mois » = mois sélectionné, **masquées en vue Consolidé**. Variations **P35** (brut) et **P95** (net). `variationVsN1` renommé `variationBeneficeNetVsN1`. Cache `murprotec-dashboard-cache-v3`.
 - **R6** (Luxembourg col J / Hollande col H) : **différé** — codes A3 / noms d’onglets CR inconnus sans le fichier consolidé Thomas. Pas d’invention de mapping.
+
+## 2026-08-19 · [P] · R6 Pilotage commercial Luxembourg / Hollande
+
+Fichier Thomas `Rapport BENELUX 02 2026` (hors repo). Mapping lu, pas inventé :
+
+- Onglets CR : `Luxembourg`, `Hollande` (A3 vide → match sur `sheetNames` uniquement).
+- Chiffres Clés row4 : **G** = Luxembourg, **H** = Hollande. Cellules 6/7/8/36/42/45 présentes.
+- Écart vs oral 13/08 (« Luxembourg = J ») : J n’a **pas** d’en-tête agence ; G4 porte le libellé Luxembourg. On suit le fichier.
+- Pas de mapping des sous-onglets Hollande (`SLEEUWIJK`, `AMSTERDAM`, `Siège Hollande`).
+- Cache `murprotec-dashboard-cache-v4`.

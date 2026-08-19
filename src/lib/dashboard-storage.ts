@@ -1,7 +1,7 @@
 /**
  * Cache navigateur des dashboards (POC) — survit au refresh.
  * Wipe uniquement via set null / clearAll (boutons réinitialiser).
- * v3 : P35/P95 distincts + champs bénéfice consolidé / mois.
+ * v4 : CK Luxembourg (G) / Hollande (H).
  */
 
 import type {
@@ -16,10 +16,10 @@ import {
   resolveMonthIdForAgency,
 } from "@/lib/reporting/month-view";
 
-export const DASHBOARD_STORAGE_KEY = "murprotec-dashboard-cache-v3";
+export const DASHBOARD_STORAGE_KEY = "murprotec-dashboard-cache-v4";
 
 export type DashboardCache = {
-  version: 3;
+  version: 4;
   tresorerie: TresorerieData | null;
   reporting: ReportingBundle | null;
   selectedAgenceId: string | null;
@@ -33,7 +33,7 @@ type Listener = () => void;
 const listeners = new Set<Listener>();
 
 let memory: DashboardCache = {
-  version: 3,
+  version: 4,
   tresorerie: null,
   reporting: null,
   selectedAgenceId: null,
@@ -68,7 +68,7 @@ function isReportingBundle(v: unknown): v is ReportingBundle {
 }
 
 const SERVER_SNAPSHOT: DashboardCache = {
-  version: 3,
+  version: 4,
   tresorerie: null,
   reporting: null,
   selectedAgenceId: null,
@@ -78,7 +78,7 @@ const SERVER_SNAPSHOT: DashboardCache = {
 
 export function emptyDashboardCache(): DashboardCache {
   return {
-    version: 3,
+    version: 4,
     tresorerie: null,
     reporting: null,
     selectedAgenceId: null,
@@ -89,9 +89,9 @@ export function emptyDashboardCache(): DashboardCache {
 
 function parseStored(raw: string): Omit<DashboardCache, "hydrated"> {
   const parsed: unknown = JSON.parse(raw);
-  if (!isRecord(parsed) || parsed.version !== 3) {
+  if (!isRecord(parsed) || parsed.version !== 4) {
     return {
-      version: 3,
+      version: 4,
       tresorerie: null,
       reporting: null,
       selectedAgenceId: null,
@@ -126,7 +126,7 @@ function parseStored(raw: string): Omit<DashboardCache, "hydrated"> {
     selectedAgenceId = null;
   }
   return {
-    version: 3,
+    version: 4,
     tresorerie,
     reporting,
     selectedAgenceId,
@@ -146,12 +146,13 @@ function writeToLocalStorage(cache: Omit<DashboardCache, "hydrated">): void {
       window.localStorage.removeItem(DASHBOARD_STORAGE_KEY);
       window.localStorage.removeItem("murprotec-dashboard-cache-v1");
       window.localStorage.removeItem("murprotec-dashboard-cache-v2");
+      window.localStorage.removeItem("murprotec-dashboard-cache-v3");
       return;
     }
     window.localStorage.setItem(
       DASHBOARD_STORAGE_KEY,
       JSON.stringify({
-        version: 3,
+        version: 4,
         tresorerie: cache.tresorerie,
         reporting: cache.reporting,
         selectedAgenceId: cache.selectedAgenceId,
@@ -199,7 +200,7 @@ export function hydrateDashboardCacheFromStorage(): void {
     const parsed = raw
       ? parseStored(raw)
       : {
-          version: 3 as const,
+          version: 4 as const,
           tresorerie: null,
           reporting: null,
           selectedAgenceId: null,
@@ -238,10 +239,10 @@ export function subscribeDashboardCache(listener: Listener): () => void {
 }
 
 export function replaceDashboardCache(
-  next: Omit<DashboardCache, "hydrated" | "version"> & { version?: 3 },
+  next: Omit<DashboardCache, "hydrated" | "version"> & { version?: 4 },
 ): void {
   memory = {
-    version: 3,
+    version: 4,
     tresorerie: next.tresorerie,
     reporting: next.reporting,
     selectedAgenceId: next.selectedAgenceId,
@@ -259,6 +260,7 @@ export function clearDashboardCache(): void {
       window.localStorage.removeItem(DASHBOARD_STORAGE_KEY);
       window.localStorage.removeItem("murprotec-dashboard-cache-v1");
       window.localStorage.removeItem("murprotec-dashboard-cache-v2");
+      window.localStorage.removeItem("murprotec-dashboard-cache-v3");
     } catch {
       // ignore
     }
