@@ -29,6 +29,16 @@ import {
   replaceDashboardCache,
   subscribeDashboardCache,
 } from "@/lib/dashboard-storage";
+import {
+  clearRapprochementCache,
+  getRapprochementCacheServerSnapshot,
+  getRapprochementCacheSnapshot,
+  hydrateRapprochementCacheFromStorage,
+  setRapprochementCrm,
+  setRapprochementWinbooks,
+  subscribeRapprochementCache,
+} from "@/lib/rapprochement-storage";
+import type { CrmListeRougeLigne, WinbooksLigne } from "@/types/rapprochement";
 
 type DashboardDataContextValue = {
   /** false tant que le cache local n’a pas été lu (évite un flash empty state). */
@@ -42,6 +52,16 @@ type DashboardDataContextValue = {
   setReportingBundle: (data: ReportingBundle | null) => void;
   setSelectedAgenceId: (id: string) => void;
   setSelectedMonthId: (id: ReportingMonthId) => void;
+  rapprochementCrm: CrmListeRougeLigne[] | null;
+  rapprochementCrmFileName: string | null;
+  rapprochementWinbooks: WinbooksLigne[] | null;
+  rapprochementWinbooksFileName: string | null;
+  setRapprochementCrm: (lignes: CrmListeRougeLigne[] | null, fileName: string | null) => void;
+  setRapprochementWinbooks: (
+    lignes: WinbooksLigne[] | null,
+    fileName: string | null,
+  ) => void;
+  clearRapprochement: () => void;
   clearAll: () => void;
 };
 
@@ -55,9 +75,15 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
     getDashboardCacheSnapshot,
     getDashboardCacheServerSnapshot,
   );
+  const rapprochement = useSyncExternalStore(
+    subscribeRapprochementCache,
+    getRapprochementCacheSnapshot,
+    getRapprochementCacheServerSnapshot,
+  );
 
   useEffect(() => {
     hydrateDashboardCacheFromStorage();
+    hydrateRapprochementCacheFromStorage();
   }, []);
 
   const setTresorerieData = useCallback((data: TresorerieData | null) => {
@@ -122,6 +148,7 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
 
   const clearAll = useCallback(() => {
     clearDashboardCache();
+    clearRapprochementCache();
   }, []);
 
   const selectedReportingData = useMemo((): ReportingData | null => {
@@ -135,7 +162,7 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(
     () => ({
-      isCacheReady: cache.hydrated,
+      isCacheReady: cache.hydrated && rapprochement.hydrated,
       tresorerieData: cache.tresorerie,
       reportingBundle: cache.reporting,
       selectedAgenceId: cache.selectedAgenceId,
@@ -145,6 +172,13 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
       setReportingBundle,
       setSelectedAgenceId,
       setSelectedMonthId,
+      rapprochementCrm: rapprochement.crm,
+      rapprochementCrmFileName: rapprochement.crmFileName,
+      rapprochementWinbooks: rapprochement.winbooks,
+      rapprochementWinbooksFileName: rapprochement.winbooksFileName,
+      setRapprochementCrm,
+      setRapprochementWinbooks,
+      clearRapprochement: clearRapprochementCache,
       clearAll,
     }),
     [
@@ -153,6 +187,11 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
       cache.reporting,
       cache.selectedAgenceId,
       cache.selectedMonthId,
+      rapprochement.hydrated,
+      rapprochement.crm,
+      rapprochement.crmFileName,
+      rapprochement.winbooks,
+      rapprochement.winbooksFileName,
       selectedReportingData,
       setTresorerieData,
       setReportingBundle,

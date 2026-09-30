@@ -316,3 +316,63 @@ Fichier Thomas `Rapport BENELUX 02 2026` (hors repo). Mapping lu, pas inventé :
 - Écart vs oral 13/08 (« Luxembourg = J ») : J n’a **pas** d’en-tête agence ; G4 porte le libellé Luxembourg. On suit le fichier.
 - Pas de mapping des sous-onglets Hollande (`SLEEUWIJK`, `AMSTERDAM`, `Siège Hollande`).
 - Cache `murprotec-dashboard-cache-v4`.
+
+## 2026-09-30 · [P] · Rapprochement — lecture liste rouge CRM
+
+CDC-MURPROTECLUX-002, brique lecture CRM uniquement. Parsers Trésorerie / Reporting inchangés.
+
+- Fichier exemplaire `exemplaires/LISTE ROUGE PAR DATE POSE.doc` = **RTF** (pas un tableau Word) : cellules en `\posx` / `\posy`.
+- Module neuf `src/lib/crm/parse-liste-rouge.ts` + type `CrmListeRougeLigne`. Pas de dépendance ajoutée. Lecture navigateur (`windows-1252`).
+- Champs : nom client (libellé, pas le code numérique), contrat **avec préfixe** (LUA4049, LUC3080S, D-BE-281…), n° facture, date ISO, montant rouge (`null` si absent, jamais 0).
+- Commentaires de relance, Travaux le, Mnt TTC : ignorés. Normalisation du préfixe pays : tâche suivante, pas faite ici.
+- Contrôle : `npx tsx scripts/verify-liste-rouge.mts` → 42 lignes sur l'exemplaire.
+
+## 2026-09-30 · [P] · Rapprochement — lecture Winbooks Excel
+
+Exemplaire `exemplaires/MURPROLUX Historique clients  30 06 2026.xls` (postes ouverts clients). Pas de colonne « Solde » ni de symbole de devise (`Mt.devise` = 0 partout).
+
+- `numeroTiers` = « Réf client » trimé (texte : `10599`, `LUD542`, `241F1`, `LUD634B`).
+- `solde` ligne = `Débit(debN) − Crédit(credN)`. Crédit seul → solde négatif. Cellule vide → erreur, pas un 0 inventé.
+- Une ligne du fichier = une ligne. Pas de cumul par tiers.
+- Module `src/lib/winbooks/`, parsers CRM / trésorerie / reporting inchangés.
+- Contrôle : `npx tsx scripts/verify-winbooks.mts` → 203 lignes.
+
+## 2026-09-30 · [P] · Rapprochement — lecture Winbooks PDF
+
+Même extraction que l'Excel, calée sur `exemplaires/MURPROLUX Historique clients 30 06 2026.pdf`.
+
+- Dépendance `pdfjs-dist` (positions de texte). Legacy build en Node, build standard dans le navigateur.
+- Bandeau client = numéro de tiers (le libellé peut être numérique, ex. `14094`). Reporté d'une page à l'autre.
+- Écriture = date + un montant. À gauche du milieu Débit/Crédit → solde positif, à droite → négatif.
+- Ligne « Solde (EUR) » ignorée (total de tiers, absente de l'Excel).
+- Contrôle : `npx tsx scripts/verify-winbooks-pdf.mts` → 203 lignes identiques à l'Excel.
+
+## 2026-09-30 · [P] · Rapprochement — identifiant numérique et correspondance
+
+`identifiantNormalise` = premier groupe de chiffres, zéros de tête retirés (`BE487` → `487`, `LUC3080S` → `3080`, `241F1` → `241`). Appliqué au contrat CRM et à la réf. Winbooks.
+
+- Nom client unique → toutes les écritures de cet identifiant.
+- Plusieurs contrats au même nom → document Winbooks = n° facture CRM, sinon date. Pas de cumul des deux contrats sur le même tiers.
+- Excel et PDF portent aussi `numeroDocument` et `dateDocument` (nécessaires au secours). 203 lignes toujours identiques.
+- Exemplaire : 39 paires ; `LUA4049`, `LUC2836`, `LUA4154` sans écriture. `LUC3080` / `LUC3080S` séparés par la facture.
+- Contrôle : `npx tsx scripts/verify-rapprochement.mts`. Statuts OK / Not OK / Non apparié : tâche suivante.
+
+## 2026-09-30 · [P] · Rapprochement — écart et statuts
+
+Décision Boldys 23/09/2026 : statut « Non apparié » en plus de OK / Not OK.
+
+- Écart = montant CRM − somme des soldes Winbooks liés à la paire (centimes entiers).
+- OK si \|écart\| ≤ 1 centime. Not OK au-delà. Montant CRM absent sur une paire → Not OK, écart null.
+- Non apparié : contrat sans écriture, ou écriture sans contrat. Une ligne chacun.
+- Exemplaire : 23 OK, 16 Not OK, 160 Non apparié. `LUC3137` (5 écritures) OK par la somme. `LUC2837` Not OK, écart `-4435.56`.
+- Contrôle : `npx tsx scripts/verify-statuts.mts`. Pas d'écran ni de PDF d'écarts.
+
+## 2026-09-30 · [P] · Rapprochement — écran et PDF des écarts
+
+Route `/rapprochement` sur le même socle. Les parsers trésorerie et reporting ne sont pas modifiés.
+
+- Deux dépôts : liste rouge CRM, Winbooks Excel ou PDF (détection `%PDF`).
+- Tableau écran = toutes les lignes (`attribuerStatuts`). PDF = Not OK et Non apparié seulement (`#rapprochement-print-sheet`).
+- Cache `murprotec-rapprochement-cache-v1`, distinct du cache v4, exposé par `useDashboardData()`. Les statuts sont dérivés, pas persistés.
+- `FileUpload` affiche aussi `CrmParseError` et `WinbooksParseError`.
+- PDF navigateur : `pdfjs-dist/webpack.mjs` (worker), legacy inchangé sous Node.

@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useId, useRef, useState, type DragEvent } from "react";
+import { CrmParseError } from "@/lib/crm/errors";
 import { ParseError } from "@/lib/excel/errors";
+import { WinbooksParseError } from "@/lib/winbooks/errors";
 
 type FileUploadProps = {
   /** Parse 100 % navigateur (ArrayBuffer → SheetJS) — pas d’upload serveur. */
@@ -43,7 +45,11 @@ export function FileUpload({
         const data = await parseFile(file);
         onSuccess(data);
       } catch (err) {
-        if (err instanceof ParseError) {
+        if (
+          err instanceof ParseError ||
+          err instanceof CrmParseError ||
+          err instanceof WinbooksParseError
+        ) {
           reportError(err.message);
         } else {
           reportError(

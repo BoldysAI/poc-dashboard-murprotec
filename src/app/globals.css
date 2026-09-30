@@ -60,7 +60,8 @@ body {
   }
 
   #tresorerie-print-sheet,
-  #reporting-print-sheet {
+  #reporting-print-sheet,
+  #rapprochement-print-sheet {
     display: block !important;
     width: 100%;
     color: #29235c;
@@ -150,6 +151,58 @@ body {
 
   #reporting-print-sheet .print-legend li {
     padding: 1px 0;
+  }
+
+  #rapprochement-print-sheet {
+    font-size: 7.5pt;
+    line-height: 1.25;
+  }
+
+  #rapprochement-print-sheet .print-synthese-meta {
+    margin: 0 0 6px;
+    font-size: 8pt;
+  }
+
+  #rapprochement-print-sheet table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  #rapprochement-print-sheet th,
+  #rapprochement-print-sheet td {
+    border-bottom: 1px solid rgba(41, 35, 92, 0.15);
+    padding: 2px 4px;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  #rapprochement-print-sheet thead {
+    display: table-header-group;
+  }
+
+  #rapprochement-print-sheet th {
+    font-size: 6.5pt;
+    font-weight: 600;
+  }
+
+  #rapprochement-print-sheet tr {
+    break-inside: avoid;
+  }
+
+  #rapprochement-print-sheet .num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  #rapprochement-print-sheet .statut-not-ok {
+    color: #b42318;
+    font-weight: 600;
+  }
+
+  #rapprochement-print-sheet .statut-non {
+    color: #b45309;
+    font-weight: 600;
   }
 
   .print-banner {
