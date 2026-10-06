@@ -8,11 +8,11 @@ export type CrmListeRougeLigne = {
   nomClient: string;
   /** Contrat tel que dans le fichier, préfixe pays inclus (ex. LUA4049, D-BE-281). */
   numeroContrat: string;
-  /** Colonne « No facture ». Absente → null. */
+  /** Colonne « No facture ». Absente (liste d'attente) → null. */
   numeroFacture: string | null;
   /** Colonne « Date », ISO AAAA-MM-JJ. Absente → null. */
   dateFacture: string | null;
-  /** Colonne « Mnt rouge ». Absente → null. */
+  /** « Mnt rouge » ou « Montant » de la liste d'attente. Absent → null. */
   montantRouge: number | null;
 };
 

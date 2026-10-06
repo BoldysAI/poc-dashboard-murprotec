@@ -74,10 +74,86 @@ for (const ligne of lignes) {
 let rejected = false;
 try {
   parseListeRouge("pas du rtf");
-} catch {
+} catch (error) {
   rejected = true;
+  const message = error instanceof Error ? error.message : "";
+  if (!message.includes("liste rouge") || !message.includes("liste d'attente")) {
+    throw new Error(`Message non RTF inattendu : ${message}`);
+  }
 }
 if (!rejected) throw new Error("Un fichier non RTF aurait dû être rejeté");
+
+let foreign = false;
+try {
+  parseListeRouge("{\\rtf1 sans en-têtes}");
+} catch (error) {
+  foreign = true;
+  const message = error instanceof Error ? error.message : "";
+  if (!message.includes("liste rouge") || !message.includes("liste d'attente")) {
+    throw new Error(`Message en-têtes inattendu : ${message}`);
+  }
+}
+if (!foreign) throw new Error("Un RTF sans les deux jeux d'en-têtes aurait dû être rejeté");
+
+const attente = parseListeRouge(
+  new TextDecoder("windows-1252").decode(
+    readFileSync(resolve(process.cwd(), "exemplaires/LISTE ATT POSE PAR CONTRAT.doc")),
+  ),
+);
+if (attente.length !== 133) {
+  throw new Error(`133 lignes d'attente attendues, ${attente.length} lues`);
+}
+
+assertLigne(attente[0], {
+  nomClient: "SA SEL",
+  numeroContrat: "000000000011075",
+  numeroFacture: null,
+  dateFacture: "2026-06-11",
+  montantRouge: 6468.62,
+});
+assertLigne(
+  attente.find((ligne) => ligne.numeroContrat === "11127EC"),
+  {
+    nomClient: "MOMIN SYLVAIN",
+    numeroContrat: "11127EC",
+    numeroFacture: null,
+    dateFacture: "2026-03-24",
+    montantRouge: 1126.26,
+  },
+);
+assertLigne(
+  attente.find((ligne) => ligne.numeroContrat === "D-BE-197"),
+  {
+    nomClient: "KINSCH GILBERT",
+    numeroContrat: "D-BE-197",
+    numeroFacture: null,
+    dateFacture: "2025-09-26",
+    montantRouge: 872.12,
+  },
+);
+assertLigne(
+  attente.find((ligne) => ligne.numeroContrat === "DBE338"),
+  {
+    nomClient: "SPRIET MICHELE",
+    numeroContrat: "DBE338",
+    numeroFacture: null,
+    dateFacture: "2025-12-16",
+    montantRouge: 3682.48,
+  },
+);
+
+const cents = attente.reduce((somme, ligne) => somme + Math.round((ligne.montantRouge ?? 0) * 100), 0);
+if (cents !== 73844060) {
+  throw new Error(`Somme des montants ${cents / 100}, attendu 738440.60`);
+}
+for (const ligne of attente) {
+  if (!ligne.nomClient || !ligne.numeroContrat || !ligne.dateFacture || ligne.montantRouge == null) {
+    throw new Error(`Ligne incomplète ${ligne.numeroContrat}`);
+  }
+  if (ligne.numeroContrat.startsWith("Pose") || ligne.numeroFacture !== null) {
+    throw new Error(`Champ inattendu sur ${ligne.numeroContrat}`);
+  }
+}
 
 console.log(
   JSON.stringify(

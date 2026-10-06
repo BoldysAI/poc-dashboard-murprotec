@@ -1,24 +1,34 @@
-import type { LigneStatut } from "@/types/rapprochement";
+import type { LigneStatut, StatutRapprochement } from "@/types/rapprochement";
 import { afficherLigne } from "./format-rapprochement";
+
+const ORDRE_STATUT: StatutRapprochement[] = ["OK", "Not OK", "Non apparié"];
 
 type RapprochementPrintSheetProps = {
   lignes: LigneStatut[];
+  /** Statuts cochés pour cet export. Indépendant du filtre du tableau. */
+  statuts: StatutRapprochement[];
   crmFileName: string;
   winbooksFileName: string;
 };
 
 /**
- * Feuille d’impression : uniquement Not OK et Non apparié.
+ * Feuille d’impression des statuts choisis.
  * Invisible à l’écran (`hidden print:block`).
  */
 export function RapprochementPrintSheet({
   lignes,
+  statuts,
   crmFileName,
   winbooksFileName,
 }: RapprochementPrintSheetProps) {
-  const ecarts = lignes.filter((ligne) => ligne.statut !== "OK");
-  const notOk = ecarts.filter((ligne) => ligne.statut === "Not OK").length;
-  const nonApparie = ecarts.length - notOk;
+  const retenus = ORDRE_STATUT.filter((statut) => statuts.includes(statut));
+  const ecarts = lignes.filter((ligne) => retenus.includes(ligne.statut));
+  const meta =
+    retenus.length === 0
+      ? "Aucun statut retenu pour cet export."
+      : retenus
+          .map((statut) => `${ecarts.filter((ligne) => ligne.statut === statut).length} ${statut}`)
+          .join(" · ");
 
   return (
     <section id="rapprochement-print-sheet" className="hidden print:block">
@@ -38,12 +48,9 @@ export function RapprochementPrintSheet({
           </p>
         </div>
       </header>
-      <p className="print-synthese-meta">
-        {notOk} Not OK · {nonApparie} Non apparié. Les lignes OK ne figurent pas dans cette
-        synthèse.
-      </p>
+      <p className="print-synthese-meta">{meta}</p>
       {ecarts.length === 0 ? (
-        <p>Tous les contrats rapprochés sont dans la tolérance d’un centime.</p>
+        <p>Aucune ligne ne correspond aux statuts retenus pour cet export.</p>
       ) : (
         <table>
           <thead>
@@ -62,7 +69,11 @@ export function RapprochementPrintSheet({
             {ecarts.map((ligne, index) => {
               const affichee = afficherLigne(ligne);
               const statutClass =
-                affichee.statut === "Not OK" ? "statut-not-ok" : "statut-non";
+                affichee.statut === "OK"
+                  ? "statut-ok"
+                  : affichee.statut === "Not OK"
+                    ? "statut-not-ok"
+                    : "statut-non";
               return (
                 <tr key={index}>
                   <td className={statutClass}>{affichee.statut}</td>

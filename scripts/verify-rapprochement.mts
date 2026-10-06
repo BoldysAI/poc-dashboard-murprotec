@@ -42,7 +42,13 @@ assert(be487?.winbooks.length === 1 && be487.winbooks[0].numeroDocument === "102
 const luc3080 = resultat.paires.find((paire) => paire.crm.numeroContrat === "LUC3080");
 const luc3080s = resultat.paires.find((paire) => paire.crm.numeroContrat === "LUC3080S");
 assert(luc3080?.critere === "facture" && luc3080.winbooks[0]?.numeroDocument === "10245621", "LUC3080");
+assert(luc3080?.winbooks.some((ligne) => ligne.numeroDocument === "19"), "LUC3080 acompte");
+assert(
+  luc3080?.winbooks.every((ligne) => ligne.numeroTiers === "LUC3080"),
+  "LUC3080 ne prend pas LUC3080S",
+);
 assert(luc3080s?.critere === "facture" && luc3080s.winbooks[0]?.numeroDocument === "10245632", "LUC3080S");
+assert(luc3080s?.winbooks.every((ligne) => ligne.numeroTiers === "LUC3080S"), "LUC3080S isolé");
 
 const chatar = resultat.paires.find((paire) => paire.crm.numeroContrat === "D-BE-529");
 assert(chatar?.critere === "identifiant" && chatar.winbooks.length === 2, "CHATAR deux écritures");

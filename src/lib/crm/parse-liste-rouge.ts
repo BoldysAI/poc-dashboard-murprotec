@@ -7,7 +7,7 @@ const ROW_Y_TOLERANCE = 40;
 /** Cadres de commentaires de relance : beaucoup plus larges que les colonnes. */
 const COMMENT_MIN_WIDTH = 4000;
 
-const COLUMN_LABELS = [
+const ROUGE_LABELS = [
   "Client",
   "Contrat",
   "Date",
@@ -17,6 +17,11 @@ const COLUMN_LABELS = [
   "Mnt rouge",
 ] as const;
 
+/** Liste d'attente : Vendeur sert d'ancre pour ne pas le coller au contrat. Il n'est pas lu. */
+const ATTENTE_LABELS = ["Client", "Date", "No Contrat", "Vendeur", "Montant"] as const;
+
+type ColumnLabel = (typeof ROUGE_LABELS)[number] | (typeof ATTENTE_LABELS)[number];
+
 type ColumnKey =
   | "client"
   | "contrat"
@@ -24,25 +29,26 @@ type ColumnKey =
   | "facture"
   | "travaux"
   | "ttc"
+  | "vendeur"
   | "montant";
 
-const LABEL_TO_KEY: Record<(typeof COLUMN_LABELS)[number], ColumnKey> = {
+type Layout = "rouge" | "attente";
+
+const LABEL_TO_KEY: Record<ColumnLabel, ColumnKey> = {
   Client: "client",
   Contrat: "contrat",
+  "No Contrat": "contrat",
   Date: "date",
   "No facture": "facture",
   "Travaux le": "travaux",
   "Mnt TTC": "ttc",
   "Mnt rouge": "montant",
+  Vendeur: "vendeur",
+  Montant: "montant",
 };
 
-const REQUIRED_COLUMNS: ColumnKey[] = [
-  "client",
-  "contrat",
-  "date",
-  "facture",
-  "montant",
-];
+const ROUGE_REQUIRED: ColumnKey[] = ["client", "contrat", "date", "facture", "montant"];
+const ATTENTE_REQUIRED: ColumnKey[] = ["client", "contrat", "date", "vendeur", "montant"];
 
 const MONTHS: Record<string, number> = {
   janv: 1,
@@ -71,25 +77,31 @@ type HeaderAnchor = {
   x: number;
 };
 
+type HeaderSet = {
+  layout: Layout;
+  anchors: HeaderAnchor[];
+};
+
 /**
- * Lit l'export CRM « liste rouge ».
- * Le fichier reçu est du RTF enregistré en `.doc` : chaque cellule est un
- * paragraphe positionné (`\posx` / `\posy`), pas un tableau.
+ * Lit un export CRM Word/RTF : liste rouge, ou liste d'attente par contrat.
+ * Chaque cellule est un paragraphe positionné (`\posx` / `\posy`), pas un tableau.
  */
 export function parseListeRouge(rtf: string): CrmListeRougeLigne[] {
   const source = rtf.trimStart();
   if (!source.startsWith("{\\rtf")) {
     throw new CrmParseError(
-      "Ce fichier n'est pas une liste rouge Word (contenu RTF attendu).",
+      "Ce fichier n'est ni une liste rouge ni une liste d'attente (contenu Word/RTF attendu).",
     );
   }
 
   const pages = splitPages(source);
   const lignes: CrmListeRougeLigne[] = [];
-  let headers: HeaderAnchor[] | null = null;
+  let headers: HeaderSet | null = null;
 
   for (const page of pages) {
-    const frames = extractFrames(page).filter((frame) => frame.w < COMMENT_MIN_WIDTH);
+    const frames = extractFrames(page).filter(
+      (frame) => frame.w < COMMENT_MIN_WIDTH || frame.text in LABEL_TO_KEY,
+    );
     const pageHeaders = readHeaders(frames);
     if (pageHeaders) headers = pageHeaders;
     if (!headers) continue;
@@ -103,11 +115,11 @@ export function parseListeRouge(rtf: string): CrmListeRougeLigne[] {
 
   if (!headers) {
     throw new CrmParseError(
-      "En-têtes de la liste rouge introuvables (Client, Contrat, Date, No facture, Mnt rouge).",
+      "Ce fichier n'est ni une liste rouge (Client, Contrat, Date, No facture, Mnt rouge) ni une liste d'attente (Client, Date, No Contrat, Montant).",
     );
   }
   if (lignes.length === 0) {
-    throw new CrmParseError("Aucune ligne de contrat trouvée dans la liste rouge.");
+    throw new CrmParseError("Aucune ligne de contrat trouvée.");
   }
   return lignes;
 }
@@ -155,15 +167,27 @@ function extractFrames(page: string): Frame[] {
   return frames;
 }
 
-function readHeaders(frames: Frame[]): HeaderAnchor[] | null {
+function readHeaders(frames: Frame[]): HeaderSet | null {
+  const rouge = anchorsFor(frames, ROUGE_LABELS, ROUGE_REQUIRED);
+  if (rouge) return { layout: "rouge", anchors: rouge };
+  const attente = anchorsFor(frames, ATTENTE_LABELS, ATTENTE_REQUIRED);
+  if (attente) return { layout: "attente", anchors: attente };
+  return null;
+}
+
+function anchorsFor(
+  frames: Frame[],
+  labels: readonly ColumnLabel[],
+  required: ColumnKey[],
+): HeaderAnchor[] | null {
   const anchors: HeaderAnchor[] = [];
-  for (const label of COLUMN_LABELS) {
+  for (const label of labels) {
     const frame = frames.find((item) => item.text === label);
     if (!frame) continue;
     anchors.push({ key: LABEL_TO_KEY[label], x: frame.x });
   }
   const keys = new Set(anchors.map((anchor) => anchor.key));
-  if (!REQUIRED_COLUMNS.every((key) => keys.has(key))) return null;
+  if (!required.every((key) => keys.has(key))) return null;
   return anchors;
 }
 
@@ -182,24 +206,23 @@ function clusterRows(frames: Frame[]): Frame[][] {
 }
 
 function isHeaderCluster(cluster: Frame[]): boolean {
-  return cluster.some((frame) => frame.text === "Contrat");
+  return cluster.some((frame) => frame.text === "Contrat" || frame.text === "No Contrat");
 }
 
-function readLigne(
-  cluster: Frame[],
-  headers: HeaderAnchor[],
-): CrmListeRougeLigne | null {
+function readLigne(cluster: Frame[], headers: HeaderSet): CrmListeRougeLigne | null {
   const byColumn = new Map<ColumnKey, Frame[]>();
   for (const frame of cluster) {
     if (!frame.text) continue;
-    const key = nearestColumn(frame.x, headers);
+    const key = nearestColumn(frame.x, headers.anchors);
     const list = byColumn.get(key);
     if (list) list.push(frame);
     else byColumn.set(key, [frame]);
   }
 
   const contrat = cellText(byColumn.get("contrat"));
-  if (!contrat || contrat === "Contrat") return null;
+  if (!contrat || contrat === "Contrat" || contrat === "No Contrat" || contrat.startsWith("Pose")) {
+    return null;
+  }
 
   const nomClient = clientName(byColumn.get("client"));
   if (!nomClient) {
@@ -209,10 +232,20 @@ function readLigne(
   return {
     nomClient,
     numeroContrat: contrat,
-    numeroFacture: optionalText(byColumn.get("facture")),
+    numeroFacture: headers.layout === "rouge" ? optionalText(byColumn.get("facture")) : null,
     dateFacture: parseDateCell(cellText(byColumn.get("date")), contrat),
-    montantRouge: parseMontantCell(cellText(byColumn.get("montant")), contrat),
+    montantRouge: parseMontantCell(montantTexte(byColumn.get("montant"), headers.layout), contrat),
   };
+}
+
+/** Liste d'attente : le drapeau « F » partage la colonne Montant. Seul le nombre est gardé. */
+function montantTexte(frames: Frame[] | undefined, layout: Layout): string | null {
+  if (layout === "rouge") return cellText(frames);
+  const amount = frames?.find((frame) => {
+    const cleaned = frame.text.replace(/[\s\u00a0\u202f]/g, "").replace(",", ".");
+    return /^-?\d+(\.\d+)?$/.test(cleaned);
+  });
+  return amount?.text ?? null;
 }
 
 function clientName(frames: Frame[] | undefined): string | null {

@@ -376,3 +376,38 @@ Route `/rapprochement` sur le même socle. Les parsers trésorerie et reporting 
 - Cache `murprotec-rapprochement-cache-v1`, distinct du cache v4, exposé par `useDashboardData()`. Les statuts sont dérivés, pas persistés.
 - `FileUpload` affiche aussi `CrmParseError` et `WinbooksParseError`.
 - PDF navigateur : `pdfjs-dist/webpack.mjs` (worker), legacy inchangé sous Node.
+
+## 2026-10-06 · [P] · Rapprochement — écritures ouvertes du même tiers
+
+Recette du 05/10/2026. Quand un client a plusieurs contrats, seule la facture était retenue. Les autres écritures du même compte partaient en Non apparié, alors que leur montant était souvent l'écart.
+
+- Après le lien facture ou date, on ajoute les écritures encore libres du même `numeroTiers` exact si le compte n'est pas déjà à ± 1 centime.
+- `LUC3080` ne prend pas les écritures de `LUC3080S`. Sur un compte partagé (`281`, `445`, `11071`), l'écriture va au contrat Not OK, pas à celui déjà juste.
+- `DBE534` reste OK : l'écriture en plus n'est pas sommée. `LUC2837` reste Not OK.
+- Exemplaire : 37 OK, 2 Not OK, 140 Non apparié. Les 3 contrats sans tiers restent Non apparié.
+- Contrôle : `npx tsx scripts/verify-statuts.mts`.
+
+## 2026-10-06 · [P] · Rapprochement — liste d'attente au dépôt CRM
+
+Recette du 05/10/2026. `LISTE ATT POSE PAR CONTRAT.doc` était refusé : en-têtes différents de la liste rouge.
+
+- Même parser `parseListeRouge`. Colonnes lues : Client, No Contrat, Date, Montant. `numeroFacture` reste null.
+- Vendeur et date de pose (`Pose:`) ne servent pas au rapprochement : non extraits. Le drapeau `F`, les % et le total sont ignorés.
+- Liste rouge inchangée (42 lignes). RTF sans les deux jeux d'en-têtes : erreur en français.
+- Contrôle : `npx tsx scripts/verify-liste-rouge.mts` (133 lignes, somme des montants 738 440,60).
+
+## 2026-10-06 · [P] · Rapprochement — filtre et tri du tableau
+
+Le tableau de `/rapprochement` affichait toutes les lignes sans filtre. Sur l'exemplaire du 30/06 cela fait trop de lignes pour une lecture directe.
+
+- Filtres écran : statut, client, contrat ou tiers, n° facture. Tri au clic sur les colonnes, deux sens. Les valeurs absentes restent en fin de liste.
+- Les compteurs et l'export PDF restent sur le jeu complet. Le PDF ignore le filtre.
+- Aucun résultat : « Aucune ligne ne correspond à ces filtres. »
+
+## 2026-10-06 · [P] · Rapprochement — choix des statuts à l'export
+
+Le PDF des écarts excluait toujours les OK. Le CDC demande cette synthèse par défaut, pas un contenu figé.
+
+- Cases « Dans le PDF », indépendantes du filtre du tableau. Défaut : Not OK et Non apparié cochés, OK décoché.
+- L'en-tête indique chaque statut retenu et son nombre. Aucune ligne retenue : message à la place d'une page vide.
+- Contrôle : feuille `#rapprochement-print-sheet`.

@@ -25,9 +25,9 @@ const winbooks = parseWinbooks(
 const lignes = attribuerStatuts(rapprocher(crm, winbooks));
 
 const compte = (statut: string) => lignes.filter((ligne) => ligne.statut === statut).length;
-assert(compte("OK") === 23, `OK ${compte("OK")}`);
-assert(compte("Not OK") === 16, `Not OK ${compte("Not OK")}`);
-assert(compte("Non apparié") === 160, `Non apparié ${compte("Non apparié")}`);
+assert(compte("OK") === 37, `OK ${compte("OK")}`);
+assert(compte("Not OK") === 2, `Not OK ${compte("Not OK")}`);
+assert(compte("Non apparié") === 140, `Non apparié ${compte("Non apparié")}`);
 
 const be487 = lignes.find((ligne) => ligne.crm?.numeroContrat === "D-BE-487");
 assert(be487?.statut === "OK" && be487.ecart === 0 && be487.soldeWinbooks === 11469.33, "D-BE-487");
@@ -36,7 +36,44 @@ const plusieurs = lignes.find((ligne) => ligne.crm?.numeroContrat === "LUC3137")
 assert(plusieurs?.statut === "OK" && plusieurs.winbooks.length === 5 && plusieurs.ecart === 0, "somme");
 
 const notOk = lignes.find((ligne) => ligne.crm?.numeroContrat === "LUC2837");
-assert(notOk?.statut === "Not OK" && notOk.ecart === -4435.56, "LUC2837");
+assert(notOk?.statut === "Not OK" && notOk.ecart === 895.12 && notOk.winbooks.length === 4, "LUC2837");
+
+for (const contrat of [
+  "LUC3080",
+  "LUC3080S",
+  "LUA4190",
+  "LUA4587",
+  "LUA4678",
+  "LUC3454",
+  "LUC3230",
+  "DBE188",
+  "DCU188",
+  "DBE498",
+  "DCU498",
+  "D-CU-281",
+  "D-CU-445",
+  "000000000011071",
+]) {
+  const ligne = lignes.find((item) => item.crm?.numeroContrat === contrat);
+  assert(ligne?.statut === "OK" && ligne.ecart === 0, `${contrat} OK`);
+}
+
+const dbe534 = lignes.find((ligne) => ligne.crm?.numeroContrat === "DBE534");
+assert(dbe534?.statut === "OK" && dbe534.winbooks.length === 1, "DBE534 sans l'écriture en plus");
+assert(
+  lignes.some(
+    (ligne) =>
+      ligne.statut === "Non apparié" &&
+      ligne.winbooks[0]?.numeroTiers === "DBE534" &&
+      ligne.winbooks[0]?.numeroDocument === "10246782",
+  ),
+  "DBE534 écriture libre",
+);
+
+for (const contrat of ["LUA4049", "LUC2836", "LUA4154"]) {
+  const ligne = lignes.find((item) => item.crm?.numeroContrat === contrat);
+  assert(ligne?.statut === "Non apparié" && ligne.winbooks.length === 0, contrat);
+}
 
 const seulCrm = lignes.find((ligne) => ligne.crm?.numeroContrat === "LUA4049");
 assert(seulCrm?.statut === "Non apparié" && seulCrm.ecart === null && seulCrm.winbooks.length === 0, "LUA4049");

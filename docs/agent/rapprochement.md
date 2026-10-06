@@ -4,11 +4,14 @@
 
 ## Liste rouge CRM
 
-Exemplaire : `exemplaires/LISTE ROUGE PAR DATE POSE.doc`.
-Contenu **RTF** (en-tête `{\rtf`), extension `.doc`. Pas un tableau : une cellule = un paragraphe `\pard` avec `\posx` / `\posy` (twips, ancré page).
+Deux exports RTF (en-tête `{\rtf`), extension `.doc`. Pas un tableau : une cellule = un paragraphe `\pard` avec `\posx` / `\posy` (twips, ancré page).
 
 Parser : `parseListeRouge` / `parseListeRougeFile` dans `src/lib/crm/parse-liste-rouge.ts`.
-Type : `CrmListeRougeLigne` dans `src/types/rapprochement.ts`.
+Type : `CrmListeRougeLigne` dans `src/types/rapprochement.ts`. Le même type sert aux deux exports.
+
+### Liste rouge
+
+Exemplaire : `exemplaires/LISTE ROUGE PAR DATE POSE.doc`.
 
 Colonnes lues :
 
@@ -25,6 +28,22 @@ Regroupement : même page, `posy` à ± 40 twips (le montant rouge est ~1 pt au-
 Erreur utilisateur : `CrmParseError`, message en français.
 
 Vérification : `npx tsx scripts/verify-liste-rouge.mts` (42 lignes sur l'exemplaire).
+
+### Liste d'attente
+
+Exemplaire : `exemplaires/LISTE ATT POSE PAR CONTRAT.doc` (même fichier que `exemplaires/compta/` et `exemplaires/finance/` dans la recette). Titre « LISTE D'ATTENTE JUSQU'AU 30/06/2026 ».
+
+| Champ | En-tête | Règle |
+|---|---|---|
+| `nomClient` | Client | Libellé (lettres). Le code numérique à gauche n'est pas extrait. |
+| `numeroContrat` | No Contrat | Texte brut (`000000000011075`, `D-BE-197`, `11127EC`). |
+| `numeroFacture` | — | Pas de colonne. `null`. |
+| `dateFacture` | Date | `11-juin-26` → `2026-06-11`. Même lecture que la liste rouge. |
+| `montantRouge` | Montant | `6 468,62` → `6468.62`. Le drapeau `F` à droite du montant est ignoré. |
+
+`Vendeur` est une ancre de colonne seulement : il ne sert pas au rapprochement et ne sort pas du type. La ligne `Pose:` / `Pose: 23/07/2026` non plus (date de pose). Les pourcentages sous le montant, les commentaires et le total en bas de page sont ignorés.
+
+133 lignes. La somme des montants lus est 738 440,60 € ; le total imprimé du fichier est 738 440,59 €. Un RTF qui n'a ni les en-têtes liste rouge ni ceux de la liste d'attente est rejeté en français.
 
 ## Winbooks Excel
 
@@ -75,10 +94,12 @@ Identifiant = premier groupe de chiffres, zéros de tête retirés.
 Les deux côtés sont normalisés de la même façon (`LUA4190` et un tiers `4190` se rejoignent).
 
 - Un seul contrat pour ce nom client → toutes les écritures Winbooks de cet identifiant (`critere: "identifiant"`).
-- Plusieurs contrats pour le même nom → parmi ces écritures, celles dont le document égale le n° de facture CRM (`facture`), sinon celles dont la date égale la date de facture (`date`).
+- Plusieurs contrats pour le même nom → la facture, sinon la date, désigne le compte. On y ajoute ensuite les autres écritures ouvertes du même numéro de tiers exact, si ce compte n'est pas déjà à ± 1 centime.
+- `LUC3080` et `LUC3080S` (ou `D-BE-281` et `D-CU-281`) ne partagent pas leurs écritures : seul le numéro de tiers complet compte, pas la partie numérique.
+- Une facture déjà juste (`DBE534`) ne reçoit pas l'écriture supplémentaire.
 - Sinon la ligne CRM reste sans correspondance. Une écriture Winbooks n'est liée qu'une fois.
 
-Sur l'exemplaire : 39 paires, 3 contrats sans écriture (`LUA4049`, `LUC2836`, `LUA4154`). `LUC3080` / `LUC3080S` sont séparés par la facture `10245621` / `10245632`.
+Sur l'exemplaire : 39 paires, 3 contrats sans écriture (`LUA4049`, `LUC2836`, `LUA4154`). `LUC3080` reprend aussi le document `19` (−900 €). `LUC3080S` ne le reçoit pas.
 
 Vérification : `npx tsx scripts/verify-rapprochement.mts`.
 
@@ -94,7 +115,7 @@ Solde Winbooks d'une paire = somme des écritures liées (en centimes). Écart =
 | Not OK | Les deux côtés sont là et \|écart\| > 1 centime. Montant CRM absent → Not OK, écart null. |
 | Non apparié | Ligne CRM sans écriture, ou écriture Winbooks sans contrat. Décision Boldys 23/09/2026. |
 
-Exemplaire : 23 OK, 16 Not OK, 160 Non apparié (3 contrats + 157 écritures). `D-BE-487` et `LUC3137` (5 écritures) sont OK, écart 0. `LUC2837` est Not OK, écart `-4435.56`.
+Exemplaire : 37 OK, 2 Not OK, 140 Non apparié (3 contrats + 137 écritures). `LUC3080`, `LUA4190` et `D-CU-281` passent OK en sommant les écritures du même tiers. `DBE534` reste OK sans son écriture en plus. `LUC2837` reste Not OK (écart `895.12` après ses trois écritures). `LUA4049`, `LUC2836`, `LUA4154` restent Non apparié.
 
 Vérification : `npx tsx scripts/verify-statuts.mts`.
 
@@ -102,10 +123,9 @@ Vérification : `npx tsx scripts/verify-statuts.mts`.
 
 Route `/rapprochement`. Deux dépôts : `parseListeRougeUpload` et `parseWinbooksUpload` (PDF si le fichier commence par `%PDF`, sinon Excel).
 
-Le tableau à l'écran montre toutes les lignes, statut compris. L'export (`window.print()`, feuille `#rapprochement-print-sheet`) ne garde que Not OK et Non apparié.
+Le tableau à l'écran montre toutes les lignes, statut compris. Filtres (statut, client, contrat ou tiers, n° facture) et tri par colonne (deux sens) ne modifient ni le calcul ni les compteurs OK / Not OK / Non apparié. Un filtre sans résultat affiche « Aucune ligne ne correspond à ces filtres. »
+
+L'export (`window.print()`, feuille `#rapprochement-print-sheet`) ignore le filtre et le tri de l'écran. Des cases « Dans le PDF » choisissent les statuts : par défaut Not OK et Non apparié, OK décoché. L'en-tête du PDF donne le nombre de chaque statut retenu. Si aucune ligne ne correspond : « Aucune ligne ne correspond aux statuts retenus pour cet export. »
 
 Cache séparé `murprotec-rapprochement-cache-v1`, lu via `useDashboardData()`. Les statuts ne sont pas stockés : ils sont recalculés.
 
-## Hors de ce module
-
-- `LISTE ATT POSE PAR CONTRAT.doc`.

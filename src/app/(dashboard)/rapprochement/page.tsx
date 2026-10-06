@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { FileUpload } from "@/components/FileUpload";
 import { ResetUploadButton } from "@/components/ResetUploadButton";
 import { RapprochementPrintSheet } from "@/components/rapprochement/RapprochementPrintSheet";
@@ -8,7 +8,15 @@ import { ResultatsTable } from "@/components/rapprochement/ResultatsTable";
 import { useDashboardData } from "@/contexts/dashboard-data-context";
 import { attribuerStatuts, parseListeRougeUpload, parseWinbooksUpload, rapprocher } from "@/lib/rapprochement";
 import type { FichierRapprochement } from "@/lib/rapprochement/parse-upload";
-import type { CrmListeRougeLigne, WinbooksLigne } from "@/types/rapprochement";
+import type { CrmListeRougeLigne, StatutRapprochement, WinbooksLigne } from "@/types/rapprochement";
+
+const EXPORT_STATUTS: StatutRapprochement[] = ["Not OK", "Non apparié", "OK"];
+
+const EXPORT_DEFAUT: Record<StatutRapprochement, boolean> = {
+  OK: false,
+  "Not OK": true,
+  "Non apparié": true,
+};
 
 export default function RapprochementPage() {
   const {
@@ -21,6 +29,7 @@ export default function RapprochementPage() {
     setRapprochementWinbooks,
     clearRapprochement,
   } = useDashboardData();
+  const [exportStatuts, setExportStatuts] = useState(EXPORT_DEFAUT);
 
   const lignes = useMemo(() => {
     if (!rapprochementCrm || !rapprochementWinbooks) return null;
@@ -57,22 +66,48 @@ export default function RapprochementPage() {
           </p>
         </div>
         {aDesFichiers ? (
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              disabled={!pret}
-              onClick={() => window.print()}
-              className={[
-                "inline-flex min-h-11 cursor-pointer items-center justify-center rounded bg-primary px-4 py-2 text-sm font-medium text-white transition-colors duration-200",
-                "hover:bg-primary/90",
-                "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
-                "disabled:cursor-not-allowed disabled:opacity-50",
-                "print:hidden",
-              ].join(" ")}
-            >
-              Exporter les écarts
-            </button>
-            <ResetUploadButton onReset={clearRapprochement} />
+          <div className="flex flex-col items-stretch gap-2 sm:items-end">
+            {pret ? (
+              <fieldset className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                <legend className="text-xs font-medium text-primary/60">Dans le PDF</legend>
+                {EXPORT_STATUTS.map((statut) => (
+                  <label
+                    key={statut}
+                    className="inline-flex min-h-11 cursor-pointer items-center gap-2 text-sm text-primary"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={exportStatuts[statut]}
+                      onChange={() =>
+                        setExportStatuts((actuel) => ({
+                          ...actuel,
+                          [statut]: !actuel[statut],
+                        }))
+                      }
+                      className="size-4 accent-primary"
+                    />
+                    {statut}
+                  </label>
+                ))}
+              </fieldset>
+            ) : null}
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                disabled={!pret}
+                onClick={() => window.print()}
+                className={[
+                  "inline-flex min-h-11 cursor-pointer items-center justify-center rounded bg-primary px-4 py-2 text-sm font-medium text-white transition-colors duration-200",
+                  "hover:bg-primary/90",
+                  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+                  "disabled:cursor-not-allowed disabled:opacity-50",
+                  "print:hidden",
+                ].join(" ")}
+              >
+                Exporter les écarts
+              </button>
+              <ResetUploadButton onReset={clearRapprochement} />
+            </div>
           </div>
         ) : null}
       </header>
@@ -83,7 +118,7 @@ export default function RapprochementPage() {
           <FileUpload
             parseFile={parseListeRougeUpload}
             label="Téléverser la liste rouge"
-            hint="Fichier Word mensuel de la liste rouge. Le format est contrôlé après sélection."
+            hint="Fichier Word : liste rouge ou liste d'attente. Le format est contrôlé après sélection."
             onSuccess={(data) => {
               const parsed = data as FichierRapprochement<CrmListeRougeLigne[]>;
               setRapprochementCrm(parsed.lignes, parsed.fileName);
@@ -127,6 +162,7 @@ export default function RapprochementPage() {
       {pret && rapprochementCrmFileName && rapprochementWinbooksFileName ? (
         <RapprochementPrintSheet
           lignes={lignes}
+          statuts={EXPORT_STATUTS.filter((statut) => exportStatuts[statut])}
           crmFileName={rapprochementCrmFileName}
           winbooksFileName={rapprochementWinbooksFileName}
         />
