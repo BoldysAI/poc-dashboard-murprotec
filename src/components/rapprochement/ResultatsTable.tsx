@@ -41,22 +41,31 @@ type ResultatsTableProps = {
   lignes: LigneStatut[] | null;
 };
 
+const STATUTS_VIDES: Record<StatutRapprochement, boolean> = {
+  OK: false,
+  "Not OK": false,
+  "Non apparié": false,
+};
+
 export function ResultatsTable({ lignes }: ResultatsTableProps) {
-  const [statut, setStatut] = useState<StatutRapprochement | "">("");
+  const [statuts, setStatuts] = useState(STATUTS_VIDES);
   const [client, setClient] = useState("");
   const [contrat, setContrat] = useState("");
   const [facture, setFacture] = useState("");
   const [tri, setTri] = useState<{ cle: CleTri; sens: SensTri } | null>(null);
 
+  const statutsCoches = STATUTS.filter((statut) => statuts[statut]);
+
   const visibles = useMemo(() => {
     if (!lignes) return [];
+    const coches = STATUTS.filter((statut) => statuts[statut]);
     const filtreClient = plier(client);
     const filtreContrat = plier(contrat);
     const filtreFacture = plier(facture);
     const retenues = lignes
       .map((ligne, index) => ({ ligne, index }))
       .filter(({ ligne }) => {
-        if (statut && ligne.statut !== statut) return false;
+        if (coches.length > 0 && !coches.includes(ligne.statut)) return false;
         if (filtreClient && !plier(ligne.crm?.nomClient ?? "").includes(filtreClient)) return false;
         if (filtreContrat && !texteContrat(ligne).includes(filtreContrat)) return false;
         if (filtreFacture && !texteFacture(ligne).includes(filtreFacture)) return false;
@@ -68,7 +77,7 @@ export function ResultatsTable({ lignes }: ResultatsTableProps) {
       const ecart = comparer(a.ligne, b.ligne, tri.cle, sens);
       return ecart === 0 ? a.index - b.index : ecart;
     });
-  }, [lignes, statut, client, contrat, facture, tri]);
+  }, [lignes, statuts, client, contrat, facture, tri]);
 
   function basculerTri(cle: CleTri) {
     setTri((actuel) => {
@@ -77,34 +86,66 @@ export function ResultatsTable({ lignes }: ResultatsTableProps) {
     });
   }
 
+  function basculerStatut(statut: StatutRapprochement) {
+    setStatuts((actuel) => ({ ...actuel, [statut]: !actuel[statut] }));
+  }
+
   function effacerFiltres() {
-    setStatut("");
+    setStatuts(STATUTS_VIDES);
     setClient("");
     setContrat("");
     setFacture("");
   }
 
-  const filtresActifs = Boolean(statut || client.trim() || contrat.trim() || facture.trim());
+  const filtresActifs = Boolean(
+    statutsCoches.length > 0 || client.trim() || contrat.trim() || facture.trim(),
+  );
 
   return (
     <div className="rounded-lg border border-primary/10 bg-white">
       {lignes ? (
-        <div className="grid gap-3 border-b border-primary/10 px-4 py-3 sm:grid-cols-2 lg:grid-cols-4">
-          <label className="flex flex-col gap-1.5 text-sm font-medium text-primary/80">
-            Statut
-            <select
-              value={statut}
-              onChange={(event) => setStatut(event.target.value as StatutRapprochement | "")}
-              className={INPUT_CLASS}
-            >
-              <option value="">Tous les statuts</option>
-              {STATUTS.map((valeur) => (
-                <option key={valeur} value={valeur}>
-                  {valeur}
-                </option>
+        <div
+          className={[
+            "border-b px-4 py-3",
+            filtresActifs ? "border-accent bg-accent/15" : "border-primary/10 bg-surface",
+          ].join(" ")}
+        >
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-medium text-primary">
+              {phraseLignes(visibles.length)}
+              {filtresActifs ? ` sur ${lignes.length}` : ""}
+            </p>
+            {filtresActifs ? (
+              <button
+                type="button"
+                onClick={effacerFiltres}
+                className="inline-flex min-h-11 cursor-pointer items-center rounded border border-primary/20 bg-white px-3 py-2 text-sm font-medium text-primary hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              >
+                Effacer les filtres
+              </button>
+            ) : null}
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <fieldset className="flex flex-col gap-1.5">
+            <legend className="text-sm font-medium text-primary/80">Statut</legend>
+            <div className="flex min-h-11 flex-wrap items-center gap-x-3 gap-y-1">
+              {STATUTS.map((statut) => (
+                <label
+                  key={statut}
+                  className="inline-flex cursor-pointer items-center gap-2 text-sm text-primary"
+                >
+                  <input
+                    type="checkbox"
+                    checked={statuts[statut]}
+                    onChange={() => basculerStatut(statut)}
+                    className="size-4 accent-primary"
+                  />
+                  {statut}
+                </label>
               ))}
-            </select>
-          </label>
+            </div>
+            <p className="text-xs text-primary/55">Aucune case cochée : tous les statuts.</p>
+          </fieldset>
           <label className="flex flex-col gap-1.5 text-sm font-medium text-primary/80">
             Client
             <input
@@ -135,6 +176,7 @@ export function ResultatsTable({ lignes }: ResultatsTableProps) {
               className={INPUT_CLASS}
             />
           </label>
+          </div>
         </div>
       ) : null}
 
@@ -242,6 +284,12 @@ export function ResultatsTable({ lignes }: ResultatsTableProps) {
       </div>
     </div>
   );
+}
+
+function phraseLignes(nombre: number): string {
+  if (nombre === 0) return "Aucune ligne affichée";
+  if (nombre === 1) return "1 ligne affichée";
+  return `${nombre} lignes affichées`;
 }
 
 function texteContrat(ligne: LigneStatut): string {

@@ -411,3 +411,26 @@ Le PDF des écarts excluait toujours les OK. Le CDC demande cette synthèse par 
 - Cases « Dans le PDF », indépendantes du filtre du tableau. Défaut : Not OK et Non apparié cochés, OK décoché.
 - L'en-tête indique chaque statut retenu et son nombre. Aucune ligne retenue : message à la place d'une page vide.
 - Contrôle : feuille `#rapprochement-print-sheet`.
+
+## 2026-10-06 · [P] · Rapprochement — plusieurs statuts à l'écran
+
+Le filtre Statut du tableau était une liste à un seul choix. On ne pouvait pas voir Not OK et Non apparié ensemble.
+
+- Cases à cocher. Aucune case = tous les statuts. Client, contrat et facture restent combinables.
+- Les compteurs du jeu complet ne dépendent pas de ce filtre.
+- Distinct des cases « Dans le PDF ».
+
+## 2026-10-06 · [P] · Rapprochement — barre de filtres
+
+La barre au-dessus du tableau ne montrait ni le nombre de lignes retenues, ni un moyen d’effacer tant qu’il restait des résultats.
+
+- Fond distinct du tableau. Compteur « N lignes affichées », et « sur le total » si un filtre est rempli.
+- « Effacer les filtres » visible dès qu’un champ ou une case statut est rempli. Le tri des colonnes n’est pas réinitialisé.
+
+## 2026-10-06 · [P] · Rapprochement — choix des statuts dans une fenêtre
+
+Les cases « Dans le PDF » restaient dans l’en-tête, à côté du bouton d’export.
+
+- « Exporter les écarts » ouvre la fenêtre. L’impression part au clic sur Exporter, pas à l’ouverture.
+- Annuler, Échap ou le fond ferment sans imprimer. Défaut à chaque ouverture : Not OK et Non apparié.
+- Le filtre du tableau n’est pas touché. La feuille `#rapprochement-print-sheet` reçoit les statuts confirmés.

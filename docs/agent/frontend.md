@@ -22,6 +22,7 @@
 5. Logo : `public/logo_murpro_group.png` via `next/image` (~54 px de haut).
 6. Reporting : `AgenceTabs` + `MoisTabs` sous l’en-tête (style `border-b-2 border-accent`) pour basculer d’agence et de période.
 7. Export PDF reporting : `ReportingExportPdfButton` (une agence ou tous les onglets) → `ReportingPrintSheet` (page break / onglet) ; titre PDF = `Reporting-{onglet}` sauf export tous (`Reporting-Financier`).
+8. Export PDF rapprochement : `ExportEcartsButton` (fenêtre de statuts, défaut Not OK + Non apparié) → `RapprochementPrintSheet`. L’impression suit la confirmation, comme le reporting (`requestAnimationFrame` puis `window.print()`).
 
 ## Pattern — état session + upload
 

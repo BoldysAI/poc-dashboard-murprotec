@@ -123,9 +123,9 @@ Vérification : `npx tsx scripts/verify-statuts.mts`.
 
 Route `/rapprochement`. Deux dépôts : `parseListeRougeUpload` et `parseWinbooksUpload` (PDF si le fichier commence par `%PDF`, sinon Excel).
 
-Le tableau à l'écran montre toutes les lignes, statut compris. Filtres (statut, client, contrat ou tiers, n° facture) et tri par colonne (deux sens) ne modifient ni le calcul ni les compteurs OK / Not OK / Non apparié. Un filtre sans résultat affiche « Aucune ligne ne correspond à ces filtres. »
+Le tableau à l'écran montre toutes les lignes, statut compris. Filtres (cases statut, client, contrat ou tiers, n° facture) et tri par colonne (deux sens) ne modifient ni le calcul ni les compteurs OK / Not OK / Non apparié. Aucune case statut cochée = tous les statuts. Plusieurs cases se combinent entre elles et avec les champs texte. La barre de filtres est sur fond distinct du tableau. Elle indique le nombre de lignes affichées, et « sur N » dès qu’un filtre est rempli. « Effacer les filtres » est alors disponible, même s’il reste des lignes. Un filtre sans résultat affiche « Aucune ligne ne correspond à ces filtres. »
 
-L'export (`window.print()`, feuille `#rapprochement-print-sheet`) ignore le filtre et le tri de l'écran. Des cases « Dans le PDF » choisissent les statuts : par défaut Not OK et Non apparié, OK décoché. L'en-tête du PDF donne le nombre de chaque statut retenu. Si aucune ligne ne correspond : « Aucune ligne ne correspond aux statuts retenus pour cet export. »
+L'export (`window.print()`, feuille `#rapprochement-print-sheet`) ignore le filtre et le tri de l'écran. « Exporter les écarts » ouvre une fenêtre de choix des statuts ; l'impression ne part qu'après confirmation. À l'ouverture, Not OK et Non apparié sont cochés, OK décoché. Annuler ferme sans imprimer. L'en-tête du PDF donne le nombre de chaque statut retenu. Si aucune ligne ne correspond : « Aucune ligne ne correspond aux statuts retenus pour cet export. »
 
 Cache séparé `murprotec-rapprochement-cache-v1`, lu via `useDashboardData()`. Les statuts ne sont pas stockés : ils sont recalculés.
 
