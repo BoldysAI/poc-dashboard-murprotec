@@ -9,12 +9,13 @@
 
 ## 1. Objectif de la plateforme
 
-Application web **single-user** (Thomas Di Donato) pour visualiser deux tableaux de bord financiers indépendants, alimentés par **upload Excel manuel** :
+Application web **single-user** (Thomas Di Donato) pour visualiser les tableaux de bord financiers, alimentés par **upload manuel** :
 
 | Brique | Route | Entrée | Sortie |
 |---|---|---|---|
 | **Trésorerie Groupe** | `/tresorerie` | Fichier `.xls` (onglet `Tresorerie`) | KPI, répartition pays, recettes/dépenses, PDF |
 | **Reporting Financier** | `/reporting` | Fichier `.xlsx` (CR multi-agences) | Compte de résultat par agence, PDF |
+| **Rapprochement impayés** | `/rapprochement` | Liste rouge CRM (Word) + Winbooks (Excel ou PDF) | Tableau de statuts, PDF des écarts |
 
 Pas de base de données, pas d’ORM (CDC / AT §4.3).  
 **Auth** (DC 08/2026) : cookie JWT httpOnly mono-utilisateur (`jose`) ; credentials en env `AUTH_USERNAME` / `AUTH_PASSWORD` / `AUTH_SECRET` ; garde `src/proxy.ts`.  
@@ -192,7 +193,7 @@ Défini dans `src/types/dashboard.ts`. Les deux briques **ne partagent pas** de 
 `src/app/layout.tsx` :
 - `lang="fr"`, police IBM Plex Sans  
 - `DashboardDataProvider`  
-- `AppHeader` (nav Trésorerie / Reporting, Vision produit)  
+- `AppHeader` (nav Trésorerie / Reporting / Rapprochement, Vision produit)  
 - `<main>` max-width  
 - `AiAssistant` (widget flottant global)
 
@@ -334,6 +335,7 @@ Pas de `docker-compose` dans le repo (déploiement Git → Coolify).
 | `docs/agent/excel.md` | Dev parsing | Utilitaires SheetJS |
 | `docs/agent/tresorerie.md` | Dev brique 1 | Mapping + UI trésorerie |
 | `docs/agent/reporting.md` | Dev brique 2 | Mapping + UI reporting |
+| `docs/agent/rapprochement.md` | Dev brique 3 | CRM, Winbooks, écarts, écran |
 | `docs/agent/poc-wow.md` | Dev surcouches | Brief, alertes, assistant |
 | `docs/agent/decisions.md` | Tous | ADR append-only daté |
 

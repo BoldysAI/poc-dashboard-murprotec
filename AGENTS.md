@@ -14,6 +14,7 @@ Deux dashboards indépendants, alimentés par **upload Excel manuel** ; données
 
 1. **Trésorerie Groupe** (`/tresorerie`) — indicateurs de trésorerie consolidés.
 2. **Reporting Financier** (`/reporting`) — comptes de résultat multi-agences (onglets Excel, hors Chiffres Clés / Synthèse).
+3. **Rapprochement impayés** (`/rapprochement`, CDC-002) — liste rouge CRM × Winbooks. Brique séparée : `docs/agent/rapprochement.md`.
 
 Frontend + parsing + calculs d’affichage + export PDF dans **une seule app Next.js**.
 Hébergement : infra IT Client (`output: 'standalone'`). Spec : `docs/CDC-POC-Dashboard-Financier.pdf` (CDC-MURPROTEC-001). En cas de contradiction avec l’Annexe Technique Projet-001, **l’AT fait foi** sur le périmètre contractuel.
@@ -80,7 +81,7 @@ poc-dashboard-murprotec/
 
 1. **Pas de BDD, pas d’ORM** — utilisateur unique. **Auth** = session cookie JWT mono-user (DC 08/2026, hors AT initiale) ; pas de NextAuth / multi-comptes / reset MDP.
 2. **État client** — `DashboardDataProvider` ; **cache `localStorage`** jusqu’à réinitialisation explicite (boutons reset / `clearAll`). Pas de BDD ni fichiers serveur. Exception POC documentée dans `decisions.md` (AT §4.3 = pas de serveur ; confort démo = cache navigateur).
-3. **Deux briques indépendantes** — Trésorerie et Reporting ne partagent ni structure de données ni parsers. Pas de « modèle générique Excel » commun.
+3. **Briques indépendantes** — Trésorerie, Reporting et Rapprochement ne partagent ni structure de données ni parsers. Pas de « modèle générique Excel » commun.
 4. **Montants** — traiter comme des nombres exacts issus du fichier ; **pas de conversion de devises** (tout en EUR, confirmé Client). Pas de `float` inventé pour des agrégats métier hors spec.
 5. **Périmètre AT** = 6 indicateurs trésorerie + 5 reporting. Éléments **🔶 post-AT** (composition dépenses, cahier de commande, impayés, euro/coupon) : intégrés au POC sur décision Yassine, **hors tarif AT** — ne les étends pas sans instruction.
 6. **Charte Murpro** — primary `#29235C`, accent `#EBCA09`, surface `#EDECF1`, blanc `#FFFFFF`. Logo : `public/logo_murpro_group.png`.
@@ -154,4 +155,4 @@ Les fichiers de `docs/agent/` sont **vivants**. Tu les tiens à jour toi-même.
 - **Décisions d’architecture → `docs/agent/decisions.md`**, append-only et daté. N’écrase jamais une entrée passée.
 - **Le code fait foi** : si une doc `docs/agent/` contredit le code, corrige la doc.
 
-Living docs : `docs/agent/frontend.md`, `excel.md`, `tresorerie.md`, `reporting.md`, `poc-wow.md`, `decisions.md`.
+Living docs : `docs/agent/frontend.md`, `excel.md`, `tresorerie.md`, `reporting.md`, `rapprochement.md`, `poc-wow.md`, `decisions.md`.

@@ -6,7 +6,7 @@
 
 ## Golden rules
 
-1. **Routes métier** = `/tresorerie` et `/reporting` ; `/` redirige vers `/tresorerie`. **Auth** = `/login` (groupe `(auth)`) ; dashboards sous `(dashboard)` avec header. Garde : `src/proxy.ts` (Next.js 16 Proxy).
+1. **Routes métier** = `/tresorerie`, `/reporting` et `/rapprochement` ; `/` redirige vers `/tresorerie`. **Auth** = `/login` (groupe `(auth)`) ; dashboards sous `(dashboard)` avec header. Garde : `src/proxy.ts` (Next.js 16 Proxy).
 2. **Données dashboard** uniquement via `useDashboardData()` — ne crée pas un second store. Reporting = `reportingBundle` + `selectedAgenceId` / `selectedMonthId` / `selectedReportingData` (vue dérivée).
 3. **Empty state** : trésorerie → `TresorerieEmptyPreview` ; reporting → `ReportingEmptyPreview` (squelette des sections / graphes vides — pas de bloc gris plein).
 4. **Charte** : tokens CSS Murpro (`primary`, `accent`, `surface`, `background`) — pas de hex hardcodés dans les composants.
@@ -22,6 +22,7 @@
 5. Logo : `public/logo_murpro_group.png` via `next/image` (~54 px de haut).
 6. Reporting : `AgenceTabs` + `MoisTabs` sous l’en-tête (style `border-b-2 border-accent`) pour basculer d’agence et de période.
 7. Export PDF reporting : `ReportingExportPdfButton` (une agence ou tous les onglets) → `ReportingPrintSheet` (page break / onglet) ; titre PDF = `Reporting-{onglet}` sauf export tous (`Reporting-Financier`).
+8. Export PDF rapprochement : `ExportEcartsButton` (fenêtre de statuts, défaut Not OK + Non apparié) → `RapprochementPrintSheet`. L’impression suit la confirmation, comme le reporting (`requestAnimationFrame` puis `window.print()`).
 
 ## Pattern — état session + upload
 
@@ -39,15 +40,15 @@ const { reportingBundle, setReportingBundle, selectedReportingData } =
 - Sans données : `TresorerieEmptyPreview` / `ReportingEmptyPreview` — même layout que le dashboard chargé, graphes / valeurs vides (pas de bloc gris plein).
 - Reporting chargé : `AgenceTabs` + `selectedReportingData` pour les blocs.
 - **Pas d’attribut `accept`** sur l’input : le sélecteur ne filtre pas par extension ; la validation format/structure est **dans `parseFile`** (message d’erreur affiché).
-- Erreurs : `ParseError.message` affiché à l’utilisateur — jamais de stack.
+- Erreurs : `ParseError`, `CrmParseError` ou `WinbooksParseError` — le message français est affiché, jamais la stack.
 - Parsing Excel **100 % navigateur** (`parseTresorerieFile` / `parseReportingFile`) — pas d’upload serveur (évite le transfert des .xlsx lourds type Power Pivot ~48 Mo).
 - Refresh navigateur = **conserve** le cache (`localStorage`, clé `murprotec-dashboard-cache-v4`) jusqu’à reset explicite.
-- Wipe : boutons réinitialiser / `clearAll` → `clearDashboardCache()`.
+- Wipe : boutons réinitialiser / `clearAll` → `clearDashboardCache()`. Le rapprochement a sa propre clé `murprotec-rapprochement-cache-v1` (`src/lib/rapprochement-storage.ts`), exposée par le même hook ; `clearAll` et le bouton de la page l’effacent aussi.
 
 ## Charts & KPI briques
 
 - Lib autorisée : **Recharts** (`recharts` dans `package.json`) pour les graphiques reporting / trésorerie.
-- Reporting : `src/components/reporting/` · Trésorerie : `src/components/tresorerie/` (KPI cards, formatters dédiés — pas d’import croisé entre briques).
+- Reporting : `src/components/reporting/` · Trésorerie : `src/components/tresorerie/` · Rapprochement : `src/components/rapprochement/` (formatters dédiés — pas d’import croisé entre briques).
 - Surcouches démo produit : `src/components/poc/` + `src/lib/poc/` — playbook `poc-wow.md`.
   - Brief & alertes : tiroir `InsightsDrawer` (bouton header page).
   - Vision produit post-POC : `PostPocInfoButton` dans `AppHeader`.

@@ -8,6 +8,7 @@ import { PostPocInfoButton } from "@/components/poc/PostPocInfoButton";
 const NAV_ITEMS = [
   { href: "/tresorerie", label: "Trésorerie Groupe" },
   { href: "/reporting", label: "Reporting Financier" },
+  { href: "/rapprochement", label: "Rapprochement" },
 ] as const;
 
 export function AppHeader() {
