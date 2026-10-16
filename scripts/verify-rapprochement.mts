@@ -9,7 +9,7 @@ import { identifiantNormalise, rapprocher } from "../src/lib/rapprochement/rappr
 import { parseWinbooks } from "../src/lib/winbooks/parse-winbooks";
 import type { CrmListeRougeLigne, WinbooksLigne } from "../src/types/rapprochement";
 
-function assert(condition: boolean, message: string) {
+function assert(condition: boolean | undefined, message: string) {
   if (!condition) throw new Error(message);
 }
 
